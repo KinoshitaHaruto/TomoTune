@@ -1,13 +1,17 @@
-import { useState } from 'react'
+import { Routes, Route } from 'react-router-dom'
+import Home from './pages/Home'
 
 function App() {
-  const [count, setCount] = useState(0)
-
-  return (
-    <>
-      <h1>Tomo Tune</h1>
-    </>
-  )
+    return (
+        <Routes>
+            
+            <Route path="/" element={<Home />} />
+            {/* path="/" : http://localhost:5173/ にアクセスした時
+            element={<Home />} : Homeコンポーネントを表示する
+            */}
+    
+        </Routes>
+    )
 }
 
 export default App
