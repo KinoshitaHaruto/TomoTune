@@ -1,14 +1,20 @@
 import { Routes, Route } from 'react-router-dom'
+import Layout from './components/Layout'
 import Home from './pages/Home'
+import Login from './pages/Login'
+
 
 function App() {
     return (
         <Routes>
-            
-            <Route path="/" element={<Home />} />
-            {/* path="/" : http://localhost:5173/ にアクセスした時
-            element={<Home />} : Homeコンポーネントを表示する
+            <Route element={<Layout />}>
+            {/* Layoutで囲む
+                path="/" 以下の全てのページに Layoutを適用
             */}
+                <Route path="/" element={<Home />} />
+                <Route path="/login" element={<Login />} />
+        </Route>
+            
     
         </Routes>
     )
