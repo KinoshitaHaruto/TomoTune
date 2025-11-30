@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Box, Heading, Text, Button, VStack, Stack, Card, CardBody, Divider} from '@chakra-ui/react'
+import { Box, Heading, Text, Button, VStack, Stack, Card, CardBody, Divider, useToast,} from '@chakra-ui/react'
+
+import LikeButton from '../components/LikeButton'
 
 // 曲データの設計図
 type Song = {
@@ -13,6 +15,42 @@ type Song = {
 function Home() {
   const [songs, setSongs] = useState<Song[]>([])
   const navigate = useNavigate()
+  const toast = useToast()
+
+  // いいね！ボタンが押されたときの処理
+  const handleLike = (songId: number) => {
+    const userId = localStorage.getItem("tomo_user_id")
+    if (!userId) {
+      console.error("ユーザーIDが見つかりません")
+      return
+    }
+    fetch("http://127.0.0.1:8000/likes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ 
+        song_id: songId,
+        user_id: userId
+      }),
+    })
+    .then(res => {
+      if (!res.ok) throw new Error("送信失敗")
+      return res.json()
+    })
+    .then(data => {
+      if (data.is_milestone) {
+        toast({
+          title: "Congratulations! 🎉",
+          description: "5回いいね！お気に入りに登録されました",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+          position: "top", 
+          containerStyle: { marginTop: "40px" }
+        })
+      }
+    })
+    .catch(error => console.error(error))
+  }
 
   // ログインチェック
     useEffect(() => {
@@ -46,18 +84,28 @@ function Home() {
               
               <Divider /> 
 
-              {song.url ? (
-                <audio 
-                  controls 
-                  src={song.url} 
-                  style={{ width: '100%' }} 
-                  controlsList="nodownload noplaybackrate"
-                >
-                  オーディオ非対応
-                </audio>
-              ) : (
-                <Text color="red.400" fontSize="sm">※ 音声ファイルがありません</Text>
-              )}
+              <Box display="flex" alignItems="center">
+                <Box flex={1}>
+                  {song.url ? (
+                    <audio 
+                      controls 
+                      src={song.url} 
+                      style={{ width: '100%' }} 
+                      controlsList="nodownload noplaybackrate"
+                    >
+                    オーディオ非対応
+                    </audio>
+                  ) : (
+                    <Text color="red.400" fontSize="sm">※ 音声ファイルがありません</Text>
+                  )}
+                </Box>
+                
+                <LikeButton /* 自作したLikeButton部品 */
+                  songId={song.id} 
+                  onClick={handleLike} 
+                  ml="auto"
+                />
+              </Box>
             </Stack>
           </CardBody>
         </Card>
