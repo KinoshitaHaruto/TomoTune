@@ -25,14 +25,6 @@ def scan_static_files():
 
 songs = scan_static_files()
 
-songs.append({
-        "id": 2,
-        "title": "テストソング",
-        "artist": "テストアーティスト",
-        "url": "" # ファイルがない場合のテスト用
-    })
-
-
 # 曲IDをキーにして曲データを素早く取得できるようにする辞書
 songs_map = {song["id"]: song for song in songs}
 

@@ -1,5 +1,5 @@
 import logging
-from fastapi import FastAPI,  Depends
+from fastapi import FastAPI, Depends, status, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
@@ -8,6 +8,9 @@ import os
 
 import crud
 from database import get_db
+
+
+LIKE_MILESTONE = 5
 
 # How to run
 # cd backend
@@ -33,6 +36,10 @@ app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), na
 # --- リクエストモデル ---
 class LoginRequest(BaseModel):
     name: str
+
+class LikeRequest(BaseModel):
+    song_id: int
+    user_id: str
 
 
 # --- API ---
@@ -60,6 +67,35 @@ def login(req: LoginRequest, db: Session = Depends(get_db)):
     
     # ユーザー情報を返す
     return user
+
+
+@app.post("/likes", status_code=status.HTTP_201_CREATED)
+def create_like(like: LikeRequest, db: Session = Depends(get_db)):
+    # 曲の存在チェック
+    target_song = crud.get_song_by_id(db, like.song_id)
+    if target_song is None:
+        raise HTTPException(status_code=404, detail="曲が見つかりません")
+
+    # テストユーザー取得 (DBから)
+    user = crud.get_user_by_id(db, like.user_id)
+    if not user:
+        raise HTTPException(status_code=500, detail="テストユーザーがいません")
+
+    # いいね保存 (DBへ)
+    crud.create_like(db, user.id, like.song_id)
+    
+    # 集計
+    total = crud.count_likes(db, like.song_id, user.id)
+    
+    is_milestone = (total == LIKE_MILESTONE)
+
+    logger.info(f"[❤️]: User: {user.name} | SongID: {like.song_id} | Total: {total}")
+
+    return {
+        "status": "ok", 
+        "total_likes": total, 
+        "is_milestone": is_milestone
+    }
 
 if __name__ == "__main__":
     import uvicorn
