@@ -1,8 +1,10 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
+import os
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # SQLiteのファイル名
-SQLALCHEMY_DATABASE_URL = "sqlite:///./tomotune.db"
+SQLALCHEMY_DATABASE_URL = f"sqlite:///{os.path.join(BASE_DIR, 'tomoTune.db')}"
 
 # エンジン
 # check_same_thread: False はSQLiteの設定

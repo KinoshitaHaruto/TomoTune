@@ -11,7 +11,6 @@ class User(Base):
     name = Column(String, index=True)
     mbti = Column(String, nullable=True) # まだ決まってない人はNone(null)
 
-
 # 曲テーブル
 class Song(Base):
     __tablename__ = "songs"

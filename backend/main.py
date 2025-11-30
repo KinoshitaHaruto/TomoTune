@@ -1,43 +1,46 @@
-from fastapi import FastAPI # サーバーを作るため
-from fastapi.middleware.cors import CORSMiddleware  # CORS対策のための許可証
-from fastapi.staticfiles import StaticFiles # 静的ファイルを配信するため
-from data import songs
+import logging
+from fastapi import FastAPI,  Depends
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from sqlalchemy.orm import Session
+from pydantic import BaseModel
+import os
 
+import crud
+from database import get_db
 
-# How to Run:
+# How to run
 # cd backend
 # uvicorn main:app --reload
+API_URL="http://127.0.0.1:8000"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("uvicorn")
 
-# アプリのインスタンス作成
 app = FastAPI()
 
-# 許可証の発行
 app.add_middleware(
     CORSMiddleware,
-    # 「この住所からのアクセスなら許可する」リスト
     allow_origins=["http://localhost:5173"], 
     allow_credentials=True,
-    allow_methods=["*"],  # どんな命令(GET, POSTなど)もOK
-    allow_headers=["*"],  # どんなヘッダー情報もOK
+    allow_methods=["*"],    
+    allow_headers=["*"],
 )
 
+app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), name="static")
 
-# 音楽ファイル置き場の公開
-# URLで "/static" と指定されたら、実際の "static" フォルダの中身を見せる
-app.mount("/static", StaticFiles(directory="static"), name="static")
+# --- API ---
 
-# 「/」というURLにアクセスが来たら実行する関数
 @app.get("/")
 def read_root():
-    # JSON形式のデータを返す
-    return {"message": "Hello, TomoTune!"}
+    return {"message": "TomoTune Backend is running!"}
 
-@app.get("/hello")
-def say_hello():
-    return {"message": "Hello from main.py!"}
-
-# 曲リストを返すAPI
+# 全曲取得API
 @app.get("/songs")
-def get_songs():
-    return songs
+def read_songs(db: Session = Depends(get_db)):
+    return crud.get_all_songs(db)
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)

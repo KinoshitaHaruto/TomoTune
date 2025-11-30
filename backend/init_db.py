@@ -5,22 +5,6 @@ import os
 
 BASE_URL = "http://127.0.0.1:8000"
 
-def scan_static_files():
-    """staticフォルダ内の音楽ファイルをスキャンしてsongsリストを更新する"""
-    static_dir = "static"
-    songs = []
-    for i, filename in enumerate(os.listdir(static_dir)):
-        if filename.endswith(".mp3"):
-            title = filename.replace(".mp3", "").replace("_", " ")  #タイトル(mp3拡張子を削除しアンダースコアをスペースに変換)
-            song = {
-                "id": i + 1,
-                "title": title,
-                "artist": "Unknown Artist",  # アーティスト情報は不明
-                "url": f"{BASE_URL}/static/{filename}"
-            }
-            songs.append(song)
-    return songs
-
 def init_database():
     print("データベース構築を開始...")
 
@@ -48,10 +32,8 @@ def init_database():
                 print(f"ユーザー追加: {u['name']}")
 
         # --- 曲の登録 ---
-        # フォルダをスキャンしてリストを取得
-
-        file_songs = scan_static_files()
-        for s in file_songs:
+        # data.py の songs リストから登録
+        for s in songs:
             # 重複チェック: タイトルで確認
             existing = db.query(Song).filter(Song.title == s["title"]).first()
             if not existing:
