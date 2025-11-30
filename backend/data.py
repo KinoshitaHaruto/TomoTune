@@ -4,7 +4,7 @@
 BASE_URL = "http://127.0.0.1:8000"
 
 # 曲のリスト (これをReactに送ります)
-sample_songs = [
+songs = [
     {
         "id": 1,
         "title": "Morning",
@@ -13,8 +13,8 @@ sample_songs = [
     },
     {
         "id": 2,
-        "title": "真夜中のコード",
-        "artist": "Python Jazz",
+        "title": "テストソング",
+        "artist": "テストアーティスト",
         "url": "" # ファイルがない場合のテスト用
     }
 ]
