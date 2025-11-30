@@ -45,7 +45,7 @@ function Login() {
   return (
     <VStack spacing={8} mt={10}>
       <VStack spacing={2}>
-        <Heading color="pink.400" size="xl">TomoTune</Heading>
+        <Heading color="pink.400" size="xl">ログイン</Heading>
         <Text color="gray.500">名前を入力してスタート</Text>
       </VStack>
 
