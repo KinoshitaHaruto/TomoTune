@@ -30,6 +30,11 @@ app.add_middleware(
 
 app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), name="static")
 
+# --- リクエストモデル ---
+class LoginRequest(BaseModel):
+    name: str
+
+
 # --- API ---
 
 @app.get("/")
@@ -40,6 +45,21 @@ def read_root():
 @app.get("/songs")
 def read_songs(db: Session = Depends(get_db)):
     return crud.get_all_songs(db)
+
+@app.post("/login")
+def login(req: LoginRequest, db: Session = Depends(get_db)):
+    # その名前の人がいるか探す
+    user = crud.get_user_by_name(db, req.name)
+    
+    # いなければ新しく作る
+    if not user:
+        user = crud.create_user(db, req.name)
+        logger.info(f"✨ New User Created: {user.name} ({user.id})")
+    else:
+        logger.info(f"🔙 Login: {user.name} ({user.id})")
+    
+    # ユーザー情報を返す
+    return user
 
 if __name__ == "__main__":
     import uvicorn
