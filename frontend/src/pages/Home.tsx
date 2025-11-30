@@ -2,7 +2,19 @@ import { useEffect, useState } from 'react'
 import { Box, Heading, Text, Container } from '@chakra-ui/react'
 
 function Home() {
-  const [songs, setSongs] = useState([])
+    const [text, setText] = useState("データが届いてません")
+
+  // useEffct(何をするか いつするか)
+  useEffect(() => {
+    console.log("通信開始！")
+
+    fetch("http://127.0.0.1:8000/hello")  // 通信機能
+      .then(res => res.json())
+      .then(data => {
+        console.log("届いたデータ : ", data)
+        setText(data.message)
+      })
+  }, [])
 
   return (
     <Box bg="gray.100" minH="100vh" py={10} px={4}>{/* 全体の背景Box */}
@@ -21,7 +33,7 @@ function Home() {
         </Box>
 
         <Box p={6}>{/* メインコンテンツBox */}
-          <Text fontSize="md">Hello</Text>
+          <Text fontSize="xl" color="gray.600">サーバーからのメッセージ: {text}</Text>
         </Box>
       </Container>
     </Box>
