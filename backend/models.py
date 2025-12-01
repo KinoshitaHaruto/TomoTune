@@ -23,6 +23,9 @@ class Song(Base):
     artist = Column(String)
     url = Column(String) # mp3ファイルのパス
 
+    # パラメータを保存する列 (JSON文字列として入れる)
+    parameters = Column(String, nullable=True)
+
     # リレーション: 曲もたくさんの「いいねログ」を持つ
     like_logs = relationship("LikeLog", back_populates="song")
 
