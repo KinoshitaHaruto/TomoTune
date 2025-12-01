@@ -14,8 +14,9 @@ import {
   Input,
   IconButton,
   Textarea,
+  CloseButton,
 } from '@chakra-ui/react'
-import { FiEdit2, FiCheck, FiX } from 'react-icons/fi'
+import { FiEdit2, FiCheck } from 'react-icons/fi'
 
 interface MusicProfile {
   V_C: number
@@ -30,11 +31,10 @@ function Profile() {
   const [profileCode, setProfileCode] = useState('')
   const [followers, setFollowers] = useState(120)
   const [following, setFollowing] = useState(85)
-  const [favoriteBand, setFavoriteBand] = useState('気志圏')
-  const [tags, setTags] = useState(['ライブガチ勢', '回担担否！！'])
+  const [tags, setTags] = useState(['ライブガチ勢', '回担担否！！', '気志圏'])
   const [isEditingProfile, setIsEditingProfile] = useState(false)
-  const [editingBand, setEditingBand] = useState('気志圏')
-  const [editingTags, setEditingTags] = useState('ライブガチ勢, 回担担否！！')
+  const [editingTags, setEditingTags] = useState('ライブガチ勢, 回担担否！！, 気志圏')
+  const [newTag, setNewTag] = useState('')
   const navigate = useNavigate()
   const toast = useToast()
 
@@ -73,18 +73,17 @@ function Profile() {
       }
     }
 
-    // localStorage から バンド名とタグを取得
-    const savedBand = localStorage.getItem('tomo_favorite_band')
-    if (savedBand) setFavoriteBand(savedBand)
-    
+    // localStorage からタグを取得
     const savedTags = localStorage.getItem('tomo_profile_tags')
     if (savedTags) {
-      const parsedTags = JSON.parse(savedTags)
-      setTags(parsedTags)
-      setEditingTags(parsedTags.join(', '))
+      try {
+        const parsedTags = JSON.parse(savedTags)
+        setTags(parsedTags)
+        setEditingTags(parsedTags.join(', '))
+      } catch (err) {
+        console.error('タグ解析エラー:', err)
+      }
     }
-
-    setEditingBand(savedBand || '気志圏')
   }, [])
 
   const handleLogout = () => {
@@ -97,14 +96,12 @@ function Profile() {
 
   // 編集を保存
   const handleSaveProfile = () => {
-    localStorage.setItem('tomo_favorite_band', editingBand)
     const tagsArray = editingTags
       .split(',')
       .map((tag) => tag.trim())
       .filter((tag) => tag.length > 0)
     localStorage.setItem('tomo_profile_tags', JSON.stringify(tagsArray))
 
-    setFavoriteBand(editingBand)
     setTags(tagsArray)
     setIsEditingProfile(false)
     toast({ title: 'プロフィールを保存しました', status: 'success' })
@@ -112,9 +109,28 @@ function Profile() {
 
   // 編集をキャンセル
   const handleCancelEdit = () => {
-    setEditingBand(favoriteBand)
     setEditingTags(tags.join(', '))
     setIsEditingProfile(false)
+  }
+
+  // 新しいタグを追加（編集モード）
+  const handleAddTag = () => {
+    if (newTag.trim()) {
+      const currentTags = editingTags
+        .split(',')
+        .map((tag) => tag.trim())
+        .filter((tag) => tag.length > 0)
+      currentTags.push(newTag.trim())
+      setEditingTags(currentTags.join(', '))
+      setNewTag('')
+    }
+  }
+
+  // タグを削除（表示モード）
+  const handleRemoveTag = (idx: number) => {
+    const updatedTags = tags.filter((_, i) => i !== idx)
+    setTags(updatedTags)
+    localStorage.setItem('tomo_profile_tags', JSON.stringify(updatedTags))
   }
 
   return (
@@ -203,25 +219,12 @@ function Profile() {
               <VStack spacing={3} width="100%">
                 <Box width="100%">
                   <Text fontSize="xs" color="gray.600" mb={1}>
-                    好きなバンド
-                  </Text>
-                  <Input
-                    value={editingBand}
-                    onChange={(e) => setEditingBand(e.target.value)}
-                    placeholder="バンド名を入力"
-                    size="sm"
-                    bg="white"
-                  />
-                </Box>
-
-                <Box width="100%">
-                  <Text fontSize="xs" color="gray.600" mb={1}>
                     タグ（カンマ区切り）
                   </Text>
                   <Textarea
                     value={editingTags}
                     onChange={(e) => setEditingTags(e.target.value)}
-                    placeholder="例: ライブガチ勢, 回担担否！！"
+                    placeholder="例: ライブガチ勢, 回担担否！！, 気志圏"
                     size="sm"
                     minH="80px"
                     bg="white"
@@ -249,12 +252,23 @@ function Profile() {
               </VStack>
             ) : (
               /* 表示モード */
-              <VStack spacing={2} fontSize="sm" color="gray.700" width="100%">
-                <Text>好きなバンド：<strong>{favoriteBand}</strong></Text>
+              <VStack spacing={2} width="100%" align="start">
                 <HStack spacing={2} flexWrap="wrap" width="100%">
                   {tags.map((tag, idx) => (
-                    <Badge key={idx} variant="subtle" colorScheme="blue">
+                    <Badge
+                      key={idx}
+                      variant="solid"
+                      colorScheme="blue"
+                      display="flex"
+                      alignItems="center"
+                      gap={1}
+                    >
                       # {tag}
+                      <CloseButton
+                        size="sm"
+                        onClick={() => handleRemoveTag(idx)}
+                        ml={1}
+                      />
                     </Badge>
                   ))}
                 </HStack>
