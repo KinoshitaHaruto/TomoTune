@@ -24,6 +24,17 @@ function Home() {
       console.error("ユーザーIDが見つかりません")
       return
     }
+
+    // localStorage にいいね履歴を記録
+    const savedLikes = localStorage.getItem(`tomo_user_likes_${userId}`)
+    const likes = savedLikes ? JSON.parse(savedLikes) : []
+    likes.push({ song_id: songId, timestamp: new Date().toISOString() })
+    localStorage.setItem(`tomo_user_likes_${userId}`, JSON.stringify(likes))
+
+    // いいね数をカウント
+    const likeCount = likes.filter((like: any) => like.song_id === songId).length
+
+    // バックエンド API にも送信（非同期で）
     fetch("http://127.0.0.1:8000/likes", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -37,19 +48,22 @@ function Home() {
       return res.json()
     })
     .then(data => {
-      if (data.is_milestone) {
-        toast({
-          title: "Congratulations! 🎉",
-          description: "5回いいね！お気に入りに登録されました",
-          status: "success",
-          duration: 3000,
-          isClosable: true,
-          position: "top", 
-          containerStyle: { marginTop: "40px" }
-        })
-      }
+      console.log("バックエンド応答:", data)
     })
-    .catch(error => console.error(error))
+    .catch(error => console.error("バックエンド送信エラー:", error))
+
+    // ローカルのいいね数で判定
+    if (likeCount === 5) {
+      toast({
+        title: "Congratulations! 🎉",
+        description: "5回いいね！お気に入りに登録されました",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+        position: "top", 
+        containerStyle: { marginTop: "40px" }
+      })
+    }
   }
 
   // ログインチェック
