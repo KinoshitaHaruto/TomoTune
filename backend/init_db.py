@@ -39,7 +39,8 @@ def init_database():
                 new_song = Song(
                     title=s["title"],
                     artist=s["artist"],
-                    url=s["url"]
+                    url=s["url"],
+                    parameters=s["parameters"]
                 )
                 db.add(new_song)
                 print(f"曲追加: {s['title']}")
