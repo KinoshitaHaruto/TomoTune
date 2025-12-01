@@ -32,8 +32,8 @@ function Login() {
 
       toast({ title: `ようこそ、${data.name}さん！`, status: "success" })
 
-      // ホーム画面へ移動
-      navigate("/")
+      // アンケートページへ移動
+      navigate("/survey")
     })
     .catch(err => {
       console.error(err)

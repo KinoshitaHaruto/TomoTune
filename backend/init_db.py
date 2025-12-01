@@ -4,7 +4,6 @@ from data import songs, users
 import os
 
 BASE_URL = "http://127.0.0.1:8000"
-
 def init_database():
     print("データベース構築を開始...")
 
