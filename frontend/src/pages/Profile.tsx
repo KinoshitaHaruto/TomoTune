@@ -224,7 +224,7 @@ function Profile() {
                   <Textarea
                     value={editingTags}
                     onChange={(e) => setEditingTags(e.target.value)}
-                    placeholder="例: ライブガチ勢, 回担担否！！, 気志圏"
+                    placeholder=""
                     size="sm"
                     minH="80px"
                     bg="white"
