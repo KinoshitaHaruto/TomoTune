@@ -23,15 +23,24 @@ logger = logging.getLogger("uvicorn")
 
 app = FastAPI()
 
+# ngrok用にCORSを全許可
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"], 
+    allow_origins=["*"], 
     allow_credentials=True,
     allow_methods=["*"],    
     allow_headers=["*"],
 )
 
-app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), name="static")
+# --- パス設定 ---
+# backendディレクトリの場所
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+# 音楽ファイルの場所
+STATIC_DIR = os.path.join(BASE_DIR, "static")
+# Reactのビルド成果物の場所 (backendの親のfrontendのdist)
+DIST_DIR = os.path.join(os.path.dirname(BASE_DIR), "frontend", "dist")
+
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 # --- リクエストモデル ---
 class LoginRequest(BaseModel):
@@ -43,10 +52,6 @@ class LikeRequest(BaseModel):
 
 
 # --- API ---
-
-@app.get("/")
-def read_root():
-    return {"message": "TomoTune Backend is running!"}
 
 # 全曲取得API
 @app.get("/songs")
@@ -96,6 +101,12 @@ def create_like(like: LikeRequest, db: Session = Depends(get_db)):
         "total_likes": total, 
         "is_milestone": is_milestone
     }
+
+# ルートURL ("/") にアクセスが来たら、distフォルダの中身(index.html)を返す
+if os.path.exists(DIST_DIR):
+    app.mount("/", StaticFiles(directory=DIST_DIR, html=True), name="dist")
+else:
+    logger.warning(f"'dist' folder not found at {DIST_DIR}.")
 
 if __name__ == "__main__":
     import uvicorn

@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button, Heading, Input, Text, VStack, useToast } from '@chakra-ui/react'
 
+import { API_BASE } from '../config'
+
 function Login() {
   const [name, setName] = useState("")
   const [isLoading, setIsLoading] = useState(false)
