@@ -391,8 +391,8 @@ function Profile() {
         </ModalContent>
       </Modal>
 
-      {/* QRコード読み取りモーダル */}
-      {/* QRコード読み取り機能は、React 18 対応ライブラリ検証後に再度実装予定 */}
+      
+      
     </VStack>
   )
 }
