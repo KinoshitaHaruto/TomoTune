@@ -7,7 +7,6 @@ import {
   Text,
   VStack,
   HStack,
-  Avatar,
   Badge,
   Divider,
   Button,
@@ -16,8 +15,19 @@ import {
   IconButton,
   Textarea,
   CloseButton,
+  useDisclosure,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalCloseButton,
 } from '@chakra-ui/react'
 import { FiEdit2, FiCheck } from 'react-icons/fi'
+// 型定義がないライブラリのため、型チェックを無効化して読み込む
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import { QRCodeSVG } from 'qrcode.react'
 
 interface MusicProfile {
   V_C: number
@@ -26,16 +36,24 @@ interface MusicProfile {
   H_S: number
 }
 
+type FollowEntry = {
+  userId: string
+  profileCode?: string
+}
+
 function Profile() {
   const [userName, setUserName] = useState('')
+  const [userId, setUserId] = useState('')
   const [musicProfile, setMusicProfile] = useState<MusicProfile | null>(null)
   const [profileCode, setProfileCode] = useState('')
-  const [followers, setFollowers] = useState(120)
-  const [following, setFollowing] = useState(85)
+  const [followers] = useState(0)
+  const [following, setFollowing] = useState(0)
   const [tags, setTags] = useState(['ライブガチ勢', '回担担否！！', '気志圏'])
   const [isEditingProfile, setIsEditingProfile] = useState(false)
   const [editingTags, setEditingTags] = useState('ライブガチ勢, 回担担否！！, 気志圏')
   const [newTag, setNewTag] = useState('')
+  const [followList, setFollowList] = useState<FollowEntry[]>([])
+  const shareModal = useDisclosure()
   const navigate = useNavigate()
   const toast = useToast()
 
@@ -73,6 +91,7 @@ function Profile() {
       return
     }
 
+    setUserId(userId)
     setUserName(name)
 
     // 音楽プロフィールを取得
@@ -98,6 +117,10 @@ function Profile() {
         console.error('タグ解析エラー:', err)
       }
     }
+
+    // フォローリストを取得
+    // const savedFollows = localStorage.getItem('tomo_follow_list')
+    // 既存のフォローリスト機能は一旦オフ（将来の実装に備えてコメントアウト）
   }, [])
 
   const handleLogout = () => {
@@ -149,6 +172,15 @@ function Profile() {
 
   const avatarEmoji = musicProfile ? getProfileEmoji(profileCode) : '🎵'
 
+  // QRコードに埋め込む自分のプロフィール情報
+  const qrPayload = userId
+    ? JSON.stringify({
+        userId,
+        profileCode,
+      })
+    : ''
+
+
   return (
     <VStack spacing={6}>
       {/* ユーザー情報セクション */}
@@ -193,6 +225,13 @@ function Profile() {
                 <Text color="gray.600">
                   フォロー数： <strong>{following}</strong>
                 </Text>
+              </HStack>
+
+              {/* QR共有 & 読み取りボタン */}
+              <HStack spacing={2} mt={2}>
+                <Button size="xs" colorScheme="pink" variant="solid" onClick={shareModal.onOpen}>
+                  プロフィールを共有
+                </Button>
               </HStack>
             </VStack>
           </HStack>
@@ -328,6 +367,32 @@ function Profile() {
       >
         ログアウト
       </Button>
+
+      {/* 自分のプロフィールQRコード表示モーダル */}
+      <Modal isOpen={shareModal.isOpen} onClose={shareModal.onClose} isCentered>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>プロフィールQRコード</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody pb={6}>
+            {qrPayload ? (
+              <VStack spacing={4} align="center">
+                <QRCodeSVG value={qrPayload} size={200} />
+                <Text fontSize="sm" color="gray.600">
+                  このQRコードを友だちの端末で読み取ると、あなたをフォローできます。
+                </Text>
+              </VStack>
+            ) : (
+              <Text fontSize="sm" color="gray.600">
+                ユーザー情報が取得できませんでした。もう一度ログインし直してください。
+              </Text>
+            )}
+          </ModalBody>
+        </ModalContent>
+      </Modal>
+
+      {/* QRコード読み取りモーダル */}
+      {/* QRコード読み取り機能は、React 18 対応ライブラリ検証後に再度実装予定 */}
     </VStack>
   )
 }
