@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button, Heading, VStack, HStack, Box, Text, useToast, Circle, Progress } from '@chakra-ui/react'
 
@@ -127,9 +127,26 @@ function Survey() {
     }
 
     const profile = calculateProfile()
+    const code = getProfileCode(profile)
 
-    // プロフィールをlocalStorageに保存
+    // プロフィールをlocalStorageに保存（最新）
     localStorage.setItem("tomo_music_profile", JSON.stringify(profile))
+
+    // 履歴としても保存
+    const rawHistory = localStorage.getItem("tomo_music_profile_history")
+    let history: { timestamp: string; code: string }[] = []
+    if (rawHistory) {
+      try {
+        history = JSON.parse(rawHistory)
+      } catch (e) {
+        console.error("診断履歴解析エラー:", e)
+      }
+    }
+    history.push({
+      timestamp: new Date().toISOString(),
+      code,
+    })
+    localStorage.setItem("tomo_music_profile_history", JSON.stringify(history))
 
     toast({ title: "プロフィール設定完了！ 結果を表示します", status: "success" })
 

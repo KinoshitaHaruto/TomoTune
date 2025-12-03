@@ -1,11 +1,81 @@
+import React, { useEffect, useState } from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
-import { Box, Container, Heading, Text, HStack, IconButton, useToast } from '@chakra-ui/react'
-import { FiHome, FiPlus, FiMusic, FiUser } from 'react-icons/fi'
+import { 
+  Box, 
+  Container, 
+  Heading, 
+  Text, 
+  HStack, 
+  IconButton, 
+  useToast,
+  Drawer,
+  DrawerOverlay,
+  DrawerContent,
+  DrawerHeader,
+  DrawerBody,
+  DrawerCloseButton,
+  VStack,
+  useDisclosure,
+  Divider,
+} from '@chakra-ui/react'
+import { FiHome, FiPlus, FiMusic, FiUser, FiMenu } from 'react-icons/fi'
+
+type MusicProfile = {
+  V_C: number
+  M_A: number
+  P_R: number
+  H_S: number
+}
+
+type MbtiHistoryEntry = {
+  timestamp: string
+  code: string
+}
 
 const Layout = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const toast = useToast()
+  const { isOpen, onOpen, onClose } = useDisclosure()
+
+  const [musicProfile, setMusicProfile] = useState<MusicProfile | null>(null)
+  const [profileCode, setProfileCode] = useState('')
+  const [mbtiHistory, setMbtiHistory] = useState<MbtiHistoryEntry[]>([])
+
+  const getProfileCode = (profile: MusicProfile): string => {
+    const code = [
+      profile.V_C >= 0 ? 'V' : 'C',
+      profile.M_A >= 0 ? 'M' : 'A',
+      profile.P_R >= 0 ? 'P' : 'R',
+      profile.H_S >= 0 ? 'H' : 'S',
+    ].join('')
+    return code
+  }
+
+  useEffect(() => {
+    // 最新の診断結果
+    const savedProfile = localStorage.getItem('tomo_music_profile')
+    if (savedProfile) {
+      try {
+        const parsed = JSON.parse(savedProfile) as MusicProfile
+        setMusicProfile(parsed)
+        setProfileCode(getProfileCode(parsed))
+      } catch (e) {
+        console.error('診断プロフィール解析エラー', e)
+      }
+    }
+
+    // 診断履歴
+    const savedHistory = localStorage.getItem('tomo_music_profile_history')
+    if (savedHistory) {
+      try {
+        const parsed = JSON.parse(savedHistory) as MbtiHistoryEntry[]
+        setMbtiHistory(parsed)
+      } catch (e) {
+        console.error('診断履歴解析エラー', e)
+      }
+    }
+  }, [])
 
   const handleLogout = () => {
     localStorage.removeItem("tomo_user_id")
@@ -49,7 +119,16 @@ const Layout = () => {
           justifyContent="space-between"
           color="white"
         >
-          <Box flex={1} />
+          <Box flex={1} textAlign="left">
+            <IconButton
+              aria-label="メニュー"
+              icon={<FiMenu />}
+              bg="transparent"
+              color="white"
+              _hover={{ bg: 'whiteAlpha.200' }}
+              onClick={onOpen}
+            />
+          </Box>
 
           <Box flex={2} textAlign="center">
             <Heading size="lg" color="white">
@@ -101,6 +180,66 @@ const Layout = () => {
         </Box>
 
       </Container>
+
+      {/* ハンバーガーメニューのドロワー */}
+      <Drawer isOpen={isOpen} placement="left" onClose={onClose}>
+        <DrawerOverlay />
+        <DrawerContent>
+          <DrawerCloseButton />
+          <DrawerHeader>メニュー</DrawerHeader>
+          <DrawerBody>
+            <VStack align="start" spacing={4}>
+              {/* 過去の投稿履歴（まだ実装前なのでプレースホルダ） */}
+              <Box width="100%">
+                <Heading size="sm" mb={1}>過去の投稿履歴</Heading>
+                <Text fontSize="sm" color="gray.600">
+                  まだ投稿機能がないため、履歴は表示できません。
+                </Text>
+              </Box>
+
+              <Divider />
+
+              {/* 性格診断の詳細（最新結果） */}
+              <Box width="100%">
+                <Heading size="sm" mb={1}>性格診断の詳細</Heading>
+                {musicProfile ? (
+                  <VStack align="start" spacing={1} fontSize="sm">
+                    <Text>現在のタイプコード: <b>{profileCode}</b></Text>
+                    <Text>V-C: {musicProfile.V_C}</Text>
+                    <Text>M-A: {musicProfile.M_A}</Text>
+                    <Text>P-R: {musicProfile.P_R}</Text>
+                    <Text>H-S: {musicProfile.H_S}</Text>
+                  </VStack>
+                ) : (
+                  <Text fontSize="sm" color="gray.600">
+                    まだ診断結果が登録されていません。
+                  </Text>
+                )}
+              </Box>
+
+              <Divider />
+
+              {/* MBTI診断の履歴 */}
+              <Box width="100%">
+                <Heading size="sm" mb={1}>MBTI診断の履歴</Heading>
+                {mbtiHistory.length > 0 ? (
+                  <VStack align="start" spacing={1} fontSize="sm">
+                    {mbtiHistory.map((entry, idx) => (
+                      <Text key={idx}>
+                        {new Date(entry.timestamp).toLocaleString()} : <b>{entry.code}</b>
+                      </Text>
+                    ))}
+                  </VStack>
+                ) : (
+                  <Text fontSize="sm" color="gray.600">
+                    まだ診断履歴がありません。
+                  </Text>
+                )}
+              </Box>
+            </VStack>
+          </DrawerBody>
+        </DrawerContent>
+      </Drawer>
     </Box>
   )
 }
