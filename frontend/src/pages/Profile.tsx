@@ -1,3 +1,4 @@
+import React from 'react'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
@@ -47,6 +48,19 @@ function Profile() {
       profile.H_S >= 0 ? 'H' : 'S',
     ].join('')
     return code
+  }
+
+  // プロフィールコードに対応する絵文字を返す
+  const getProfileEmoji = (code: string): string => {
+    const emojiMap: { [key: string]: string } = {
+      VMPH: '🎸', VMPS: '🎹', VMRH: '🎺', VMRS: '🎚️',
+      VAMPH: '🎤', VAMPS: '🎧', VAMRH: '🎼', VAMRS: '💿',
+      VRPH: '🎵', VRPS: '🔊', VRRH: '🎶', VRRS: '📻',
+      CMPH: '🎸', CMPS: '🎹', CMRH: '🎺', CMRS: '🎚️',
+      CAMPH: '🎤', CAMPS: '🎧', CAMRH: '🎼', CAMRS: '💿',
+      CRPH: '🎵', CRPS: '🔊', CRRH: '🎶', CRRS: '📻',
+    }
+    return emojiMap[code] || '🎵'
   }
 
   // ページ読み込み時：localStorage からユーザー情報を取得
@@ -133,6 +147,8 @@ function Profile() {
     localStorage.setItem('tomo_profile_tags', JSON.stringify(updatedTags))
   }
 
+  const avatarEmoji = musicProfile ? getProfileEmoji(profileCode) : '🎵'
+
   return (
     <VStack spacing={6}>
       {/* ユーザー情報セクション */}
@@ -152,15 +168,18 @@ function Profile() {
 
           {/* ユーザー情報 - 横並び */}
           <HStack spacing={6} width="100%">
-            {/* アバター */}
-            <Avatar
-              name={userName}
-              bg="pink.100"
-              color="pink.400"
-              size="lg"
+            {/* アバター（シンプルな丸＋絵文字） */}
+            <Box
+              w="72px"
+              h="72px"
               borderRadius="full"
-              icon={<Text fontSize="2xl">🎵</Text>}
-            />
+              bg="pink.100"
+              display="flex"
+              alignItems="center"
+              justifyContent="center"
+            >
+              <Text fontSize="3xl">{avatarEmoji}</Text>
+            </Box>
 
             {/* ユーザー名とフォロー情報 */}
             <VStack align="start" spacing={2} flex={1}>
