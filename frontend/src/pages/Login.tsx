@@ -19,7 +19,7 @@ function Login() {
     setIsLoading(true)
 
     // ログインAPIへPOSTリクエスト
-    fetch("http://127.0.0.1:8000/login", {
+    fetch(`${API_BASE}/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name: name }),

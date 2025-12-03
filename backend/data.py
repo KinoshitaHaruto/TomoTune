@@ -5,7 +5,7 @@ import json
 import os
 
 # サーバーのURL (自分のPCの住所)
-BASE_URL = "http://127.0.0.1:8000"
+# BASE_URL = "http://127.0.0.1:8000"
 
 # --- 曲リスト ---
 
@@ -74,7 +74,7 @@ def scan_static_files():
                 "id": i,
                 "title": title,
                 "artist": artist,
-                "url": f"{BASE_URL}/static/{filename}",
+                "url": f"/static/{filename}",
                 # 辞書をJSON文字列に変換して保存
                 "parameters": json.dumps(params)
             }

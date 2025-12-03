@@ -36,7 +36,7 @@ function Home() {
     const likeCount = likes.filter((like: any) => like.song_id === songId).length
 
     // バックエンド API にも送信（非同期で）
-    fetch("${API_BASE}/likes", {
+    fetch(`${API_BASE}/likes`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ 
@@ -78,7 +78,7 @@ function Home() {
   // useEffct(何をするか いつするか)
   // 画面が出たら一度だけ実行
   useEffect(() => {
-    fetch("http://127.0.0.1:8000/songs")  // 通信機能
+    fetch(`${API_BASE}/songs`)  // 通信機能
       .then(res => res.json())
       .then(data => {
         console.log("データ受信 : ", data)
