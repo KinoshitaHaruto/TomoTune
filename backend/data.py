@@ -84,9 +84,29 @@ def scan_static_files():
 
 songs = scan_static_files()
 
-# 曲IDをキーにして曲データを素早く取得できるようにする辞書
-songs_map = {song["id"]: song for song in songs}
+# --- Music Typeリスト ---
+def load_music_types():
+    """musicType.csv を読み込んでリストを作る"""
+    types = []
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    csv_path = os.path.join(base_dir, "musicType.csv")
+    
+    if not os.path.exists(csv_path):
+        print(f"{csv_path} が見つかりません。")
+        return []
 
+    with open(csv_path, mode='r', encoding='utf-8') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            types.append({
+                "code": row["code"],
+                "name": row["name"],
+                "description": row["description"]
+            })
+    return types
+
+# 変数に入れておく（init_db.pyで使うため）
+music_types = load_music_types()
 # --- ユーザーリスト ---
 users = [
     {

@@ -14,6 +14,15 @@ class User(Base):
     # リレーション: ユーザーはたくさんの「いいねログ」を持つ
     like_logs = relationship("LikeLog", back_populates="user")
 
+# Music Typeテーブル
+class MusicType(Base):
+    __tablename__ = "music_types"
+
+    # 4文字コード (例: "VMPH") を主キーにします
+    code = Column(String, primary_key=True, index=True)
+    name = Column(String)       # タイプ名 (例: "ノリのいい人")
+    description = Column(String) # 説明文
+
 # 曲テーブル
 class Song(Base):
     __tablename__ = "songs"
