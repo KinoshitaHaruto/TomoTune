@@ -5,6 +5,8 @@ import { Box, Heading, Text, Button, VStack, Stack, Card, CardBody, Divider, use
 import { API_BASE } from '../config'
 import LikeButton from '../components/LikeButton'
 
+import { Drawer, DrawerOverlay, DrawerContent, DrawerHeader, DrawerBody, DrawerCloseButton } from '@chakra-ui/react'
+
 // 曲データの設計図
 type Song = {
   id: number;
@@ -17,6 +19,7 @@ function Home() {
   const [songs, setSongs] = useState<Song[]>([])
   const navigate = useNavigate()
   const toast = useToast()
+  const [openSongID, setOpenSongID] = useState<number | null>(null);
 
   // いいね！ボタンが押されたときの処理
   const handleLike = (songId: number) => {
@@ -67,6 +70,12 @@ function Home() {
     }
   }
 
+  // コメントボタンが押されたときの処理
+  const handleComment = (songId: number) => {
+    setOpenSongID(openSongID === songId ? null : songId);
+
+  } 
+
   // ログインチェック
     useEffect(() => {
     const userId = localStorage.getItem("tomo_user_id")
@@ -87,6 +96,7 @@ function Home() {
   }, [])
 
   return (
+  <>
     <VStack spacing={4}>
       {songs.map((song) => (
         <Card key={song.id} w="100%" shadow="sm" borderRadius="lg" border="1px solid" borderColor="gray.200">
@@ -96,8 +106,8 @@ function Home() {
                 <Heading size="md">{song.title}</Heading>
                 <Text color="gray.500" fontSize="sm">{song.artist}</Text>
               </Box>
-              
-              <Divider /> 
+
+              <Divider />
 
               <Box display="flex" alignItems="center">
                 <Box flex={1}>
@@ -108,25 +118,73 @@ function Home() {
                       style={{ width: '100%' }} 
                       controlsList="nodownload noplaybackrate"
                     >
-                    オーディオ非対応
+                      オーディオ非対応
                     </audio>
                   ) : (
                     <Text color="red.400" fontSize="sm">※ 音声ファイルがありません</Text>
                   )}
                 </Box>
-                
-                <LikeButton /* 自作したLikeButton部品 */
+
+                <LikeButton 
                   songId={song.id} 
                   onClick={handleLike} 
                   ml="auto"
                 />
+
+                <Button
+                  colorScheme="teal"
+                  ml={3}
+                  onClick={() => handleComment(song.id)}
+                >
+                  コメント
+                </Button>
               </Box>
+
             </Stack>
           </CardBody>
         </Card>
       ))}
     </VStack>
-  )
+
+    {/* ← Drawer は return の「内側」に置くこと！ */}
+    <Drawer
+      isOpen={openSongID !== null}
+      placement="bottom"
+      onClose={() => setOpenSongID(null)}
+      size="full"
+    >
+      <DrawerOverlay />
+      <DrawerContent
+        borderTopRadius="20px"
+        maxH="60vh"
+        overflowY="auto"
+        w="100%"
+        maxW="100%"
+        p={0}
+      >
+
+        <DrawerHeader borderBottomWidth="1px">
+          コメント
+        </DrawerHeader>
+        <DrawerBody>
+          <Text mb={3} fontWeight="bold">
+            投稿ID: {openSongID}
+          </Text>
+
+          <VStack align="start" spacing={3}>
+            <Text>・めっちゃいい曲！</Text>
+            <Text>・歌詞がしみる…</Text>
+            <Text>・声好きすぎる</Text>
+          </VStack>
+        </DrawerBody>
+      </DrawerContent>
+    </Drawer>
+  </>
+)
+
+
+  
+
 }
 
 export default Home
