@@ -1,5 +1,5 @@
 from database import engine, SessionLocal, Base
-from models import User, Song
+from models import User, Song, MusicType
 from data import songs, users, music_types
 import os
 
