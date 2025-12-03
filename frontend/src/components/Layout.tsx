@@ -1,6 +1,6 @@
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { Box, Container, Heading, Text, HStack, IconButton, useToast } from '@chakra-ui/react'
-import { FiHome, FiPlus, FiMusic, FiUser, FiMenu } from 'react-icons/fi'
+import { FiHome, FiPlus, FiMusic, FiUser } from 'react-icons/fi'
 
 const Layout = () => {
   const navigate = useNavigate()
@@ -49,15 +49,7 @@ const Layout = () => {
           justifyContent="space-between"
           color="white"
         >
-          <Box flex={1} textAlign="left">
-            <IconButton
-              aria-label="メニュー"
-              icon={<FiMenu />}
-              bg="transparent"
-              color="white"
-              _hover={{ bg: 'whiteAlpha.200' }}
-            />
-          </Box>
+          <Box flex={1} />
 
           <Box flex={2} textAlign="center">
             <Heading size="lg" color="white">
