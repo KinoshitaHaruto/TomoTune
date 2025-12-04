@@ -44,3 +44,10 @@ uvicorn main:app --reload
 cd frontend
 npm run dev
 ```
+
+### ngrokサーバー
+```bash
+cd frontend
+npm run build   # 環境の保存
+ngrok http 8000
+```
