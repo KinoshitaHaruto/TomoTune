@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func # 集計用(COUNTとか)
 from datetime import datetime
 import uuid
-from models import User, Song, LikeLog
+from models import User, Song, LikeLog, Post
 
 # --- 曲の操作 ---
 
@@ -69,4 +69,29 @@ def count_likes(db: Session, song_id: int, user_id: str) -> int:
         LikeLog.user_id == user_id,
         LikeLog.song_id == song_id
     ).count()
+
+
+# --- 投稿の操作 ---
+
+def create_post(db: Session, user_id: str, song_id: int, comment: str) -> Post:
+    """投稿を1件作成して保存する"""
+    new_post = Post(
+        user_id=user_id,
+        song_id=song_id,
+        comment=comment,
+    )
+    db.add(new_post)
+    db.commit()
+    db.refresh(new_post)
+    return new_post
+
+
+def get_recent_posts(db: Session, limit: int = 50):
+    """最新の投稿を新しい順に取得する"""
+    return (
+        db.query(Post)
+        .order_by(Post.created_at.desc())
+        .limit(limit)
+        .all()
+    )
 

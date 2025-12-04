@@ -46,13 +46,19 @@ DIST_DIR = os.path.join(os.path.dirname(BASE_DIR), "frontend", "dist")
 
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
-# --- リクエストモデル ---
+# --- リクエスト / レスポンスモデル ---
 class LoginRequest(BaseModel):
     name: str
 
 class LikeRequest(BaseModel):
     song_id: int
     user_id: str
+
+
+class PostCreateRequest(BaseModel):
+    user_id: str
+    song_id: int
+    comment: str
 
 
 # --- API ---
@@ -192,6 +198,70 @@ def create_like(like: LikeRequest, db: Session = Depends(get_db)):
             "HS": user.score_hs
         }
     }
+
+
+# --- 投稿API ---
+
+@app.post("/posts", status_code=status.HTTP_201_CREATED)
+def create_post(req: PostCreateRequest, db: Session = Depends(get_db)):
+    # ユーザー・曲の存在チェック
+    user = crud.get_user_by_id(db, req.user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    song = crud.get_song_by_id(db, req.song_id)
+    if not song:
+        raise HTTPException(status_code=404, detail="Song not found")
+
+    post = crud.create_post(db, req.user_id, req.song_id, req.comment)
+    logger.info(f"📝 New Post: user={user.name}, song_id={song.id}")
+
+    return {
+        "id": post.id,
+        "comment": post.comment,
+        "created_at": post.created_at.isoformat(),
+        "user": {
+            "id": user.id,
+            "name": user.name,
+        },
+        "song": {
+            "id": song.id,
+            "title": song.title,
+            "artist": song.artist,
+            "url": song.url,
+        },
+    }
+
+
+@app.get("/posts")
+def list_posts(limit: int = 50, db: Session = Depends(get_db)):
+    """
+    最新の投稿を取得（Homeページ用）
+    """
+    posts = crud.get_recent_posts(db, limit=limit)
+
+    results = []
+    for p in posts:
+        # 関連オブジェクトを明示的に参照（lazy load）
+        user = p.user
+        song = p.song
+        results.append({
+            "id": p.id,
+            "comment": p.comment,
+            "created_at": p.created_at.isoformat(),
+            "user": {
+                "id": user.id,
+                "name": user.name,
+            } if user else None,
+            "song": {
+                "id": song.id,
+                "title": song.title,
+                "artist": song.artist,
+                "url": song.url,
+            } if song else None,
+        })
+
+    return results
 
 # ルートURL ("/") にアクセスが来たら、distフォルダの中身(index.html)を返す
 if os.path.exists(DIST_DIR):
