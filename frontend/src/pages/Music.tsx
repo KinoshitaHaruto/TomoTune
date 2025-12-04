@@ -128,7 +128,11 @@ function Music() {
                     {song.url ? (
                       <audio
                         controls
-                        src={song.url}
+                        src={
+                          song.url.startsWith('http')
+                            ? song.url
+                            : `${API_BASE || ''}${song.url}`
+                        }
                         style={{ width: '100%' }}
                         controlsList="nodownload noplaybackrate"
                       >

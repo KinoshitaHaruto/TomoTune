@@ -175,7 +175,8 @@ def create_like(like: LikeRequest, db: Session = Depends(get_db)):
     # 集計
     total = crud.count_likes(db, like.song_id, user.id)
     
-    is_milestone = (total == LIKE_MILESTONE)
+    # 5回目以降は常に「お気に入り扱い」とする
+    is_milestone = (total >= LIKE_MILESTONE)
 
     logger.info(f"[❤️]: User: {user.name} | SongID: {like.song_id} | Total: {total}")
 
