@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Float
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from database import Base
@@ -9,10 +9,39 @@ class User(Base):
 
     id = Column(String, primary_key=True, index=True)   # UUIDを使うのでString型
     name = Column(String, index=True)
-    mbti = Column(String, nullable=True) # まだ決まってない人はNone(null)
+
+    # MBTI スコア (0.0 〜 1.0)
+    # 初期値は 0.5
+    # V_C: ノリ(1.0) vs 静けさ(0.0)
+    score_vc = Column(Float, default=0.5) 
     
+    # M_A: 雰囲気/Atmosphere(1.0) vs メロディ/Melody(0.0)
+    # CSVの instrumentalness が高いほど「雰囲気重視」と解釈
+    score_ma = Column(Float, default=0.5) 
+
+    # P_R: 情熱/Passion(1.0) vs 落ち着き/Relax(0.0)
+    score_pr = Column(Float, default=0.5) 
+
+    # H_S: 生音/Human(1.0) vs 電子音/Synth(0.0)
+    # CSVの acousticness が高いほど「生音」と解釈
+    score_hs = Column(Float, default=0.5) 
+
+    # 診断結果のタイプコード
+    music_type_code = Column(String, ForeignKey("music_types.code"), nullable=True)
+
+    music_type = relationship("MusicType")
+
     # リレーション: ユーザーはたくさんの「いいねログ」を持つ
     like_logs = relationship("LikeLog", back_populates="user")
+
+# Music Typeテーブル
+class MusicType(Base):
+    __tablename__ = "music_types"
+
+    # 4文字コード (例: "VMPH") を主キーにします
+    code = Column(String, primary_key=True, index=True)
+    name = Column(String)       # タイプ名 (例: "ノリのいい人")
+    description = Column(String) # 説明文
 
 # 曲テーブル
 class Song(Base):

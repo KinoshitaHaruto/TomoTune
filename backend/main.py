@@ -1,13 +1,17 @@
 import logging
+import json
 from fastapi import FastAPI, Depends, status, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from pydantic import BaseModel
 import os
 
+import models
 import crud
 from database import get_db
+
+import typeCal
 
 
 LIKE_MILESTONE = 5
@@ -73,6 +77,69 @@ def login(req: LoginRequest, db: Session = Depends(get_db)):
     # ユーザー情報を返す
     return user
 
+# 診断結果受け取り用モデル
+class DiagnosisRequest(BaseModel):
+    user_id: str
+    score_vc: float # 0.0 - 1.0
+    score_ma: float
+    score_pr: float
+    score_hs: float
+
+# 診断結果保存API
+@app.post("/diagnosis")
+def save_diagnosis(req: DiagnosisRequest, db: Session = Depends(get_db)):
+    user = crud.get_user_by_id(db, req.user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # 1. スコアを更新
+    user.score_vc = req.score_vc
+    user.score_ma = req.score_ma
+    user.score_pr = req.score_pr
+    user.score_hs = req.score_hs
+
+    # 2. タイプコードを判定 (typeCal再利用)
+    new_code = typeCal.determine_music_type_code(
+        req.score_vc, req.score_ma, req.score_pr, req.score_hs
+    )
+    user.music_type_code = new_code
+
+    db.add(user)
+    db.commit()
+    
+    logger.info(f"📝 Diagnosis Updated: {user.name} -> {new_code}")
+
+    return {"status": "ok", "music_type_code": new_code}
+
+# 詳細取得用API (Profile画面用)
+@app.get("/users/{user_id}")
+def get_user_detail(user_id: str, db: Session = Depends(get_db)):
+    # joinedloadでMusicType情報も結合して取得
+    user = db.query(models.User).options(joinedload(models.User.music_type)).filter(models.User.id == user_id).first()
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # 診断結果データの整形
+    music_type_data = None
+    if user.music_type:
+        music_type_data = {
+            "code": user.music_type.code,
+            "name": user.music_type.name,
+            "description": user.music_type.description
+        }
+
+    return {
+        "id": user.id,
+        "name": user.name,
+        "scores": {
+            "VC": user.score_vc,
+            "MA": user.score_ma,
+            "PR": user.score_pr,
+            "HS": user.score_hs
+        },
+        "music_type": music_type_data
+    }
 
 @app.post("/likes", status_code=status.HTTP_201_CREATED)
 def create_like(like: LikeRequest, db: Session = Depends(get_db)):
@@ -85,6 +152,22 @@ def create_like(like: LikeRequest, db: Session = Depends(get_db)):
     user = crud.get_user_by_id(db, like.user_id)
     if not user:
         raise HTTPException(status_code=500, detail="テストユーザーがいません")
+    
+    if target_song.parameters:
+        # 新しいスコアを計算
+        new_vc, new_ma, new_pr, new_hs = typeCal.calculate_new_scores(user, target_song.parameters)
+        
+        # 新しいタイプコードを決定
+        new_type_code = typeCal.determine_music_type_code(new_vc, new_ma, new_pr, new_hs)
+        
+        # ユーザー情報を更新
+        user.score_vc = new_vc
+        user.score_ma = new_ma
+        user.score_pr = new_pr
+        user.score_hs = new_hs
+        user.music_type_code = new_type_code
+        
+        db.add(user)
 
     # いいね保存 (DBへ)
     crud.create_like(db, user.id, like.song_id)
@@ -92,14 +175,22 @@ def create_like(like: LikeRequest, db: Session = Depends(get_db)):
     # 集計
     total = crud.count_likes(db, like.song_id, user.id)
     
-    is_milestone = (total == LIKE_MILESTONE)
+    # 5回目以降は常に「お気に入り扱い」とする
+    is_milestone = (total >= LIKE_MILESTONE)
 
     logger.info(f"[❤️]: User: {user.name} | SongID: {like.song_id} | Total: {total}")
 
     return {
         "status": "ok", 
         "total_likes": total, 
-        "is_milestone": is_milestone
+        "is_milestone": is_milestone,
+        "user_music_type": user.music_type_code, 
+        "scores": {
+            "VC": user.score_vc,
+            "MA": user.score_ma,
+            "PR": user.score_pr,
+            "HS": user.score_hs
+        }
     }
 
 # ルートURL ("/") にアクセスが来たら、distフォルダの中身(index.html)を返す
