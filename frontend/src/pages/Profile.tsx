@@ -214,7 +214,7 @@ function Profile() {
         <VStack spacing={4} align="stretch" width="100%">
           <HStack justify="space-between">
             <Heading size="md" color="gray.700">
-              推しタグ
+              プロフィール
             </Heading>
             <IconButton
               aria-label={isEditingProfile ? '完了' : '編集'}
@@ -235,7 +235,7 @@ function Profile() {
             <VStack spacing={3} width="100%">
               <Box width="100%">
                 <Text fontSize="xs" color="gray.600" mb={1}>
-                  タグ（カンマ区切り）
+                  タグ（カンマ区切りで複数追加可能）
                 </Text>
                 <Textarea
                   value={editingTags}
