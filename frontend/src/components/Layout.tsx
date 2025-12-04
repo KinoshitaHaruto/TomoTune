@@ -8,15 +8,10 @@ import {
   HStack, 
   IconButton, 
   useToast,
-  Drawer,
-  DrawerOverlay,
-  DrawerContent,
-  DrawerHeader,
-  DrawerBody,
-  DrawerCloseButton,
   VStack,
   useDisclosure,
   Divider,
+  CloseButton,
 } from '@chakra-ui/react'
 import { FiHome, FiPlus, FiMusic, FiUser, FiMenu } from 'react-icons/fi'
 
@@ -107,6 +102,7 @@ const Layout = () => {
         overflow="hidden"
         display="flex"
         flexDirection="column"
+        position="relative"
       >
         {/* ヘッダー (固定) - グラデーション背景 */}
         <Box
@@ -179,15 +175,58 @@ const Layout = () => {
           </HStack>
         </Box>
 
-      </Container>
+        {/* ハンバーガーメニューのサイドパネル（スマホ枠内に表示） */}
+        {/* オーバーレイ */}
+        {isOpen && (
+          <Box
+            position="absolute"
+            top={0}
+            left={0}
+            right={0}
+            bottom={0}
+            bg="blackAlpha.600"
+            zIndex={998}
+            onClick={onClose}
+          />
+        )}
 
-      {/* ハンバーガーメニューのドロワー */}
-      <Drawer isOpen={isOpen} placement="left" onClose={onClose}>
-        <DrawerOverlay />
-        <DrawerContent>
-          <DrawerCloseButton />
-          <DrawerHeader>メニュー</DrawerHeader>
-          <DrawerBody>
+        {/* サイドパネル */}
+        <Box
+          position="absolute"
+          top={0}
+          left={0}
+          bottom={0}
+          w="280px"
+          bg="white"
+          zIndex={999}
+          transform={isOpen ? "translateX(0)" : "translateX(-100%)"}
+          transition="transform 0.3s ease-in-out"
+          boxShadow="xl"
+          display="flex"
+          flexDirection="column"
+        >
+          <Box
+            p={4}
+            bgGradient="linear(to-r, purple.500, pink.400, red.400)"
+            color="white"
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+          >
+            <Heading size="md">メニュー</Heading>
+            <CloseButton
+              onClick={onClose}
+              color="white"
+              _hover={{ bg: 'whiteAlpha.200' }}
+            />
+          </Box>
+
+          <Box
+            flex={1}
+            overflowY="auto"
+            p={4}
+            css={{ '&::-webkit-scrollbar': { display: 'none' } }}
+          >
             <VStack align="start" spacing={4}>
               {/* 過去の投稿履歴（まだ実装前なのでプレースホルダ） */}
               <Box width="100%">
@@ -237,9 +276,10 @@ const Layout = () => {
                 )}
               </Box>
             </VStack>
-          </DrawerBody>
-        </DrawerContent>
-      </Drawer>
+          </Box>
+        </Box>
+
+      </Container>
     </Box>
   )
 }
