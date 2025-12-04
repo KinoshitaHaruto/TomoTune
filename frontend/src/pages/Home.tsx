@@ -4,6 +4,7 @@ import { Box, Heading, Text, Button, VStack, Stack, Card, CardBody, Divider, use
 
 import { API_BASE } from '../config'
 import LikeButton from '../components/LikeButton'
+import { BiComment } from "react-icons/bi"
 
 import { Drawer, DrawerOverlay, DrawerContent, DrawerHeader, DrawerBody, DrawerCloseButton } from '@chakra-ui/react'
 
@@ -132,13 +133,18 @@ function Home() {
                 />
 
                 <Button
-                  bg="#ff78b5ff"
+                  bg="pink.400"
                   color="white"
                   ml={3}
                   onClick={() => handleComment(song.id)}
+                  p={2}
+                  borderRadius="full"
+                  _hover={{ bg: "pink.500" }}
                 >
-                  コメント
+                  <BiComment size="22px" />
                 </Button>
+
+
               </Box>
 
             </Stack>
@@ -165,7 +171,7 @@ function Home() {
           display={openSongID ? "block" : "none"}
         >
           <Text fontWeight="bold" mb={3}>
-            投稿ID: {openSongID}
+            みんなのコメント
           </Text>
 
           <VStack align="start" spacing={3}>
