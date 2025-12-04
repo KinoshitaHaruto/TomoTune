@@ -1,3 +1,4 @@
+import React from 'react'
 import { Routes, Route } from 'react-router-dom'
 import Layout from './components/Layout'
 import Home from './pages/Home'
@@ -6,6 +7,7 @@ import Survey from './pages/Survey'
 import Share from './pages/Share'
 import Music from './pages/Music'
 import Profile from './pages/Profile'
+import Follow from './pages/Follow'
 
 
 function App() {
@@ -21,6 +23,7 @@ function App() {
                 <Route path="/share" element={<Share />} />
                 <Route path="/music" element={<Music />} />
                 <Route path="/profile" element={<Profile />} />
+                <Route path="/follow" element={<Follow />} />
         </Route>
             
     
