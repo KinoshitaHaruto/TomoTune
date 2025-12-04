@@ -1,4 +1,6 @@
 import { Routes, Route } from 'react-router-dom'
+import { useToast } from '@chakra-ui/react'
+import { useEffect } from 'react'
 import Layout from './components/Layout'
 import Home from './pages/Home'
 import Login from './pages/Login'
@@ -9,6 +11,30 @@ import Profile from './pages/Profile'
 
 
 function App() {
+    const toast = useToast()
+
+    useEffect(() => {
+    const checkTime = () => {
+        const now = new Date()
+        const hour = now.getHours()
+        const minute = now.getMinutes()
+
+        if ((hour === 8 && minute === 0) || (hour === 13 && minute === 0) || (hour === 18 && minute === 0) || (hour === 0 && minute === 27)) {
+            toast({
+                title: "投稿の時間です！",
+                description: "音楽をシェアしましょう 🎵",
+                status: "info",
+                duration: 5000,
+                isClosable: true,
+            })
+        }
+    }
+
+    // 1分ごとに時刻チェック
+    const interval = setInterval(checkTime, 1000)
+    return () => clearInterval(interval)
+    }, [toast])
+
     return (
         <Routes>
             <Route element={<Layout />}>
