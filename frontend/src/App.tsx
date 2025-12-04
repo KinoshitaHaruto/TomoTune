@@ -22,7 +22,7 @@ function App() {
         const minute = now.getMinutes()
         const second = now.getSeconds()
 
-        if ((hour === 8 && minute === 0 && second === 0) || (hour === 13 && minute === 0 && second === 0) || (hour === 18 && minute === 0 && second === 0) || (hour === 0 && minute === 35 && second === 0)) {
+        if ((hour === 8 && minute === 0 && second === 0) || (hour === 13 && minute === 0 && second === 0) || (hour === 18 && minute === 0 && second === 0)  /*|| (hour === 0 && minute === 35 && second === 0)*/) {
             toast({
                 title: "投稿の時間です！",
                 description: "音楽をシェアしましょう 🎵",
