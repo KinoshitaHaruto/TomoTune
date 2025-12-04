@@ -132,7 +132,8 @@ function Home() {
                 />
 
                 <Button
-                  colorScheme="teal"
+                  bg="#ff78b5ff"
+                  color="white"
                   ml={3}
                   onClick={() => handleComment(song.id)}
                 >
@@ -147,27 +148,23 @@ function Home() {
     </VStack>
 
     {/* ← Drawer は return の「内側」に置くこと！ */}
-    <Drawer
-      isOpen={openSongID !== null}
-      placement="bottom"
-      onClose={() => setOpenSongID(null)}
-      size="full"
-    >
-      <DrawerOverlay />
-      <DrawerContent
-        borderTopRadius="20px"
-        maxH="60vh"
-        overflowY="auto"
-        w="100%"
-        maxW="100%"
-        p={0}
-      >
-
-        <DrawerHeader borderBottomWidth="1px">
-          コメント
-        </DrawerHeader>
-        <DrawerBody>
-          <Text mb={3} fontWeight="bold">
+      <Box
+          position="fixed"
+          bottom={0}
+          left="50%"
+          transform="translateX(-50%)"
+          width="100%"
+          maxW="480px"
+          bg="white"
+          borderTopRadius="24px"
+          boxShadow="0 -4px 12px rgba(0,0,0,0.15)"
+          maxH="55vh"
+          overflowY="auto"
+          zIndex={2000}
+          p={4}
+          display={openSongID ? "block" : "none"}
+        >
+          <Text fontWeight="bold" mb={3}>
             投稿ID: {openSongID}
           </Text>
 
@@ -176,9 +173,12 @@ function Home() {
             <Text>・歌詞がしみる…</Text>
             <Text>・声好きすぎる</Text>
           </VStack>
-        </DrawerBody>
-      </DrawerContent>
-    </Drawer>
+
+          <Button mt={4} onClick={() => setOpenSongID(null)} w="100%">
+            閉じる
+          </Button>
+        </Box>
+        
   </>
 )
 
