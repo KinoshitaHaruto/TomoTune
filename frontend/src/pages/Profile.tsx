@@ -1,3 +1,5 @@
+"use client";
+
 import React from 'react'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -117,10 +119,6 @@ function Profile() {
         console.error('タグ解析エラー:', err)
       }
     }
-
-    // フォローリストを取得
-    // const savedFollows = localStorage.getItem('tomo_follow_list')
-    // 既存のフォローリスト機能は一旦オフ（将来の実装に備えてコメントアウト）
   }, [])
 
   const handleLogout = () => {
@@ -150,20 +148,7 @@ function Profile() {
     setIsEditingProfile(false)
   }
 
-  // 新しいタグを追加（編集モード）
-  const handleAddTag = () => {
-    if (newTag.trim()) {
-      const currentTags = editingTags
-        .split(',')
-        .map((tag) => tag.trim())
-        .filter((tag) => tag.length > 0)
-      currentTags.push(newTag.trim())
-      setEditingTags(currentTags.join(', '))
-      setNewTag('')
-    }
-  }
-
-  // タグを削除（表示モード）
+  // タグ削除
   const handleRemoveTag = (idx: number) => {
     const updatedTags = tags.filter((_, i) => i !== idx)
     setTags(updatedTags)
@@ -172,7 +157,7 @@ function Profile() {
 
   const avatarEmoji = musicProfile ? getProfileEmoji(profileCode) : '🎵'
 
-  // QRコードに埋め込む自分のプロフィール情報
+  // QRペイロード
   const qrPayload = userId
     ? JSON.stringify({
         userId,
@@ -180,10 +165,9 @@ function Profile() {
       })
     : ''
 
-
   return (
     <VStack spacing={6}>
-      {/* ユーザー情報セクション */}
+      {/* ユーザー情報 */}
       <Box
         width="100%"
         bg="white"
@@ -194,13 +178,7 @@ function Profile() {
         borderColor="gray.200"
       >
         <VStack spacing={4} align="start" width="100%">
-          {/* アカウント名ラベル */}
-          <Text fontSize="xs" color="gray.500" fontWeight="bold">
-          </Text>
-
-          {/* ユーザー情報 - 横並び */}
           <HStack spacing={6} width="100%">
-            {/* アバター（シンプルな丸＋絵文字） */}
             <Box
               w="72px"
               h="72px"
@@ -213,7 +191,6 @@ function Profile() {
               <Text fontSize="3xl">{avatarEmoji}</Text>
             </Box>
 
-            {/* ユーザー名とフォロー情報 */}
             <VStack align="start" spacing={2} flex={1}>
               <Heading size="md" color="gray.800">
                 {userName}
@@ -227,10 +204,12 @@ function Profile() {
                 </Text>
               </HStack>
 
-              {/* QR共有 & 読み取りボタン */}
               <HStack spacing={2} mt={2}>
-                <Button size="xs" colorScheme="pink" variant="solid" onClick={shareModal.onOpen}>
+                <Button size="xs" colorScheme="pink" onClick={shareModal.onOpen}>
                   プロフィールを共有
+                </Button>
+                <Button size="xs" variant="outline" onClick={() => navigate('/follow')}>
+                  QRでフォロー
                 </Button>
               </HStack>
             </VStack>
@@ -240,7 +219,7 @@ function Profile() {
 
       <Divider />
 
-      {/* 音楽プロフィールセクション */}
+      {/* 音楽プロフィール */}
       {musicProfile ? (
         <Box
           width="100%"
@@ -252,7 +231,6 @@ function Profile() {
           borderColor="blue.200"
         >
           <VStack spacing={4} align="start" width="100%">
-            {/* ヘッダー：4文字コードと編集ボタン */}
             <HStack width="100%" justify="space-between">
               <Heading size="lg" color="blue.600">
                 {profileCode}
@@ -272,44 +250,7 @@ function Profile() {
               />
             </HStack>
 
-            {/* 編集モード */}
-            {isEditingProfile ? (
-              <VStack spacing={3} width="100%">
-                <Box width="100%">
-                  <Text fontSize="xs" color="gray.600" mb={1}>
-                    タグ（カンマ区切り）
-                  </Text>
-                  <Textarea
-                    value={editingTags}
-                    onChange={(e) => setEditingTags(e.target.value)}
-                    placeholder=""
-                    size="sm"
-                    minH="80px"
-                    bg="white"
-                  />
-                </Box>
-
-                <HStack spacing={2} width="100%">
-                  <Button
-                    size="sm"
-                    colorScheme="green"
-                    flex={1}
-                    onClick={handleSaveProfile}
-                  >
-                    保存
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    flex={1}
-                    onClick={handleCancelEdit}
-                  >
-                    キャンセル
-                  </Button>
-                </HStack>
-              </VStack>
-            ) : (
-              /* 表示モード */
+            {!isEditingProfile ? (
               <VStack spacing={2} width="100%" align="start">
                 <HStack spacing={2} flexWrap="wrap" width="100%">
                   {tags.map((tag, idx) => (
@@ -322,35 +263,42 @@ function Profile() {
                       gap={1}
                     >
                       # {tag}
-                      <CloseButton
-                        size="sm"
-                        onClick={() => handleRemoveTag(idx)}
-                        ml={1}
-                      />
+                      <CloseButton size="sm" onClick={() => handleRemoveTag(idx)} />
                     </Badge>
                   ))}
+                </HStack>
+              </VStack>
+            ) : (
+              <VStack spacing={3} width="100%">
+                <Box width="100%">
+                  <Text fontSize="xs" color="gray.600" mb={1}>
+                    タグ（カンマ区切り）
+                  </Text>
+                  <Textarea
+                    value={editingTags}
+                    onChange={(e) => setEditingTags(e.target.value)}
+                    size="sm"
+                    minH="80px"
+                    bg="white"
+                  />
+                </Box>
+
+                <HStack spacing={2} width="100%">
+                  <Button size="sm" colorScheme="green" flex={1} onClick={handleSaveProfile}>
+                    保存
+                  </Button>
+                  <Button size="sm" variant="outline" flex={1} onClick={handleCancelEdit}>
+                    キャンセル
+                  </Button>
                 </HStack>
               </VStack>
             )}
           </VStack>
         </Box>
       ) : (
-        <Box
-          width="100%"
-          bg="gray.50"
-          p={6}
-          borderRadius="lg"
-          textAlign="center"
-        >
-          <Text color="gray.500">
-            音楽プロフィールを設定してください
-          </Text>
-          <Button
-            colorScheme="pink"
-            size="sm"
-            mt={4}
-            onClick={() => navigate('/survey')}
-          >
+        <Box width="100%" bg="gray.50" p={6} borderRadius="lg" textAlign="center">
+          <Text color="gray.500">音楽プロフィールを設定してください</Text>
+          <Button colorScheme="pink" size="sm" mt={4} onClick={() => navigate('/survey')}>
             設定する
           </Button>
         </Box>
@@ -358,17 +306,11 @@ function Profile() {
 
       <Divider />
 
-      {/* ログアウトボタン */}
-      <Button
-        colorScheme="red"
-        variant="outline"
-        width="100%"
-        onClick={handleLogout}
-      >
+      <Button colorScheme="red" variant="outline" width="100%" onClick={handleLogout}>
         ログアウト
       </Button>
 
-      {/* 自分のプロフィールQRコード表示モーダル */}
+      {/* QRモーダル */}
       <Modal isOpen={shareModal.isOpen} onClose={shareModal.onClose} isCentered>
         <ModalOverlay />
         <ModalContent>
@@ -383,16 +325,11 @@ function Profile() {
                 </Text>
               </VStack>
             ) : (
-              <Text fontSize="sm" color="gray.600">
-                ユーザー情報が取得できませんでした。もう一度ログインし直してください。
-              </Text>
+              <Text fontSize="sm" color="gray.600">ユーザー情報が取得できませんでした。</Text>
             )}
           </ModalBody>
         </ModalContent>
       </Modal>
-
-      
-      
     </VStack>
   )
 }
