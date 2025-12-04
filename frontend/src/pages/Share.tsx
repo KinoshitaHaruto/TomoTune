@@ -15,7 +15,7 @@ function Share() {
 
 
       // 例: 毎日21:00に通知
-      if ((hour === 8 && minute === 0) || (hour === 13 && minute === 0) || (hour === 18 && minute === 0)) {
+      if ((hour === 8 && minute === 0) || (hour === 13 && minute === 0) || (hour === 18 && minute === 0) || (hour === 0 && minute === 15)) {
         toast({
           title: "投稿の時間です！",
           description: "音楽をシェアしましょう 🎵",
