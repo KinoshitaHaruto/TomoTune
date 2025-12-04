@@ -144,7 +144,7 @@ function Follow() {
         onClick={() => navigate('/profile')}
         alignSelf="flex-start"
       >
-        × 戻る
+        back
       </Button>
 
       <Text fontSize="sm" color="gray.600" textAlign="center">
