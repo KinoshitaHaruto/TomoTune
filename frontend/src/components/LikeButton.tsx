@@ -36,8 +36,8 @@ const FlyingHeart = () => {
 
 type LikeButtonProps = {
     songId: number;
-    // 親側で「見た目のカウント」などを更新したい場合用に残すが、必須ではなくす
-    onLikeSuccess?: (newTotal: number) => void; 
+    // 親側で「見た目のカウント」やマイルストーン検知をしたい場合に使う
+    onLikeSuccess?: (newTotal: number, isMilestone: boolean) => void; 
     [key: string]: any; 
 };
 
@@ -112,7 +112,7 @@ const LikeButton = ({ songId, onLikeSuccess, ...props }: LikeButtonProps) => {
 
             // 親コンポーネントに通知
             if (onLikeSuccess) {
-                onLikeSuccess(data.total_likes);
+                onLikeSuccess(data.total_likes, data.is_milestone);
             }
 
         } catch (error) {

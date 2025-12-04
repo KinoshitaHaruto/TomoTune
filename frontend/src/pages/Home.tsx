@@ -1,191 +1,39 @@
 import React from 'react'
-import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { Box, Heading, Text, Button, VStack, Stack, Card, CardBody, Divider, useToast,} from '@chakra-ui/react'
-
-import { API_BASE } from '../config'
-import LikeButton from '../components/LikeButton'
-
-import { Drawer, DrawerOverlay, DrawerContent, DrawerHeader, DrawerBody, DrawerCloseButton } from '@chakra-ui/react'
-
-// 曲データの設計図
-type Song = {
-  id: number;
-  title: string;
-  artist: string;
-  url: string;
-};
+import { useEffect } from 'react'
+import { useNavigate, Link } from 'react-router-dom'
+import { Box, Heading, Text, Button, VStack } from '@chakra-ui/react'
 
 function Home() {
-  const [songs, setSongs] = useState<Song[]>([])
   const navigate = useNavigate()
-  const toast = useToast()
-  const [openSongID, setOpenSongID] = useState<number | null>(null);
-
-  // いいね！ボタンが押されたときの処理
-  const handleLike = (songId: number) => {
-    const userId = localStorage.getItem("tomo_user_id")
-    if (!userId) {
-      console.error("ユーザーIDが見つかりません")
-      return
-    }
-
-    // localStorage にいいね履歴を記録
-    const savedLikes = localStorage.getItem(`tomo_user_likes_${userId}`)
-    const likes = savedLikes ? JSON.parse(savedLikes) : []
-    likes.push({ song_id: songId, timestamp: new Date().toISOString() })
-    localStorage.setItem(`tomo_user_likes_${userId}`, JSON.stringify(likes))
-
-    // いいね数をカウント
-    const likeCount = likes.filter((like: any) => like.song_id === songId).length
-
-    // バックエンド API にも送信（非同期で）
-    fetch(`${API_BASE}/likes`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ 
-        song_id: songId,
-        user_id: userId
-      }),
-    })
-    .then(res => {
-      if (!res.ok) throw new Error("送信失敗")
-      return res.json()
-    })
-    .then(data => {
-      console.log("バックエンド応答:", data)
-    })
-    .catch(error => console.error("バックエンド送信エラー:", error))
-
-    // ローカルのいいね数で判定
-    if (likeCount === 5) {
-      toast({
-        title: "Congratulations! 🎉",
-        description: "5回いいね！お気に入りに登録されました",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-        position: "top", 
-        containerStyle: { marginTop: "40px" }
-      })
-    }
-  }
-
-  // コメントボタンが押されたときの処理
-  const handleComment = (songId: number) => {
-    setOpenSongID(openSongID === songId ? null : songId);
-
-  } 
 
   // ログインチェック
-    useEffect(() => {
-    const userId = localStorage.getItem("tomo_user_id")
-    if (!userId) {
-      navigate("/login")
-    }
-  }, [])
-
-  // useEffct(何をするか いつするか)
-  // 画面が出たら一度だけ実行
   useEffect(() => {
-    fetch(`${API_BASE}/songs`)  // 通信機能
-      .then(res => res.json())
-      .then(data => {
-        console.log("データ受信 : ", data)
-        setSongs(data)
-      })
+    const userId = localStorage.getItem('tomo_user_id')
+    if (!userId) {
+      navigate('/login')
+    }
   }, [])
 
   return (
-  <>
-    <VStack spacing={4}>
-      {songs.map((song) => (
-        <Card key={song.id} w="100%" shadow="sm" borderRadius="lg" border="1px solid" borderColor="gray.200">
-          <CardBody p={4}>
-            <Stack spacing={3}>
-              <Box>
-                <Heading size="md">{song.title}</Heading>
-                <Text color="gray.500" fontSize="sm">{song.artist}</Text>
-              </Box>
-
-              <Divider />
-
-              <Box display="flex" alignItems="center">
-                <Box flex={1}>
-                  {song.url ? (
-                    <audio 
-                      controls 
-                      src={song.url} 
-                      style={{ width: '100%' }} 
-                      controlsList="nodownload noplaybackrate"
-                    >
-                      オーディオ非対応
-                    </audio>
-                  ) : (
-                    <Text color="red.400" fontSize="sm">※ 音声ファイルがありません</Text>
-                  )}
-                </Box>
-
-                <LikeButton 
-                  songId={song.id} 
-                  onClick={handleLike} 
-                  ml="auto"
-                />
-
-                <Button
-                  colorScheme="teal"
-                  ml={3}
-                  onClick={() => handleComment(song.id)}
-                >
-                  コメント
-                </Button>
-              </Box>
-
-            </Stack>
-          </CardBody>
-        </Card>
-      ))}
+    <VStack spacing={6} align="stretch">
+      <Heading size="lg" color="pink.400">
+        TomoTune へようこそ
+      </Heading>
+      <Text color="gray.600" fontSize="sm">
+        曲を聴いて気に入った曲のハートボタンを押そう！Music Type がどんどん今のあなたに近づいていきます！（投稿見れる画面）
+      </Text>
+      <Box>
+        <Button
+          as={Link}
+          to="/music"
+          colorScheme="pink"
+          width="100%"
+        >
+          曲一覧へ
+        </Button>
+      </Box>
     </VStack>
-
-    {/* ← Drawer は return の「内側」に置くこと！ */}
-    <Drawer
-      isOpen={openSongID !== null}
-      placement="bottom"
-      onClose={() => setOpenSongID(null)}
-      size="full"
-    >
-      <DrawerOverlay />
-      <DrawerContent
-        borderTopRadius="20px"
-        maxH="60vh"
-        overflowY="auto"
-        w="100%"
-        maxW="100%"
-        p={0}
-      >
-
-        <DrawerHeader borderBottomWidth="1px">
-          コメント
-        </DrawerHeader>
-        <DrawerBody>
-          <Text mb={3} fontWeight="bold">
-            投稿ID: {openSongID}
-          </Text>
-
-          <VStack align="start" spacing={3}>
-            <Text>・めっちゃいい曲！</Text>
-            <Text>・歌詞がしみる…</Text>
-            <Text>・声好きすぎる</Text>
-          </VStack>
-        </DrawerBody>
-      </DrawerContent>
-    </Drawer>
-  </>
-)
-
-
-  
-
+  )
 }
 
 export default Home
