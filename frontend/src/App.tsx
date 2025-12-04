@@ -18,13 +18,14 @@ function App() {
         const now = new Date()
         const hour = now.getHours()
         const minute = now.getMinutes()
+        const second = now.getSeconds()
 
-        if ((hour === 8 && minute === 0) || (hour === 13 && minute === 0) || (hour === 18 && minute === 0) || (hour === 0 && minute === 27)) {
+        if ((hour === 8 && minute === 0 && second === 0) || (hour === 13 && minute === 0 && second === 0) || (hour === 18 && minute === 0 && second === 0) || (hour === 0 && minute === 35 && second === 0)) {
             toast({
                 title: "投稿の時間です！",
                 description: "音楽をシェアしましょう 🎵",
                 status: "info",
-                duration: 5000,
+                duration: 10000,
                 isClosable: true,
             })
         }
