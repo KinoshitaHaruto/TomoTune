@@ -47,7 +47,7 @@ const Layout = () => {
       <Container 
         maxW="480px"       
         bg="white"         
-        h="800px"          // 固定高さ（スマホサイズ）
+        h="740px"          // 固定高さ（スマホサイズ）
         borderRadius="2xl" 
         boxShadow="xl"     
         p={0}              
