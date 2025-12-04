@@ -31,7 +31,7 @@ def create_user(db: Session, name: str):
     new_user = User(
         id=new_id,
         name=name,
-        mbti=None
+        music_type_code=None
     )
     db.add(new_user)
     db.commit()

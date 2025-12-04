@@ -1,15 +1,32 @@
+import React from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
-import { Box, Container, Heading, Text, HStack, IconButton, useToast } from '@chakra-ui/react'
+import { 
+  Box, 
+  Container, 
+  Heading, 
+  Text, 
+  HStack, 
+  IconButton, 
+  useToast,
+  VStack,
+  useDisclosure,
+  Divider,
+  CloseButton,
+} from '@chakra-ui/react'
 import { FiHome, FiPlus, FiMusic, FiUser, FiMenu } from 'react-icons/fi'
+import { useUser } from '../contexts/UserContext'
 
 const Layout = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const toast = useToast()
+  const { isOpen, onOpen, onClose } = useDisclosure()
+  const { user } = useUser()
 
   const handleLogout = () => {
     localStorage.removeItem("tomo_user_id")
     localStorage.removeItem("tomo_user_name")
+    toast({ title: 'ログアウトしました', status: 'info' })
     navigate("/login")
   }
 
@@ -30,13 +47,14 @@ const Layout = () => {
       <Container 
         maxW="480px"       
         bg="white"         
-        h="800px"          // 固定高さ（スマホサイズ）
+        h="740px"          // 固定高さ（スマホサイズ）
         borderRadius="2xl" 
         boxShadow="xl"     
         p={0}              
         overflow="hidden"
         display="flex"
         flexDirection="column"
+        position="relative"
       >
         {/* ヘッダー (固定) - グラデーション背景 */}
         <Box
@@ -56,6 +74,7 @@ const Layout = () => {
               bg="transparent"
               color="white"
               _hover={{ bg: 'whiteAlpha.200' }}
+              onClick={onOpen}
             />
           </Box>
 
@@ -106,6 +125,101 @@ const Layout = () => {
               />
             ))}
           </HStack>
+        </Box>
+
+        {/* ハンバーガーメニューのサイドパネル（スマホ枠内に表示） */}
+        {/* オーバーレイ */}
+        {isOpen && (
+          <Box
+            position="absolute"
+            top={0}
+            left={0}
+            right={0}
+            bottom={0}
+            bg="blackAlpha.600"
+            zIndex={998}
+            onClick={onClose}
+          />
+        )}
+
+        {/* サイドパネル */}
+        <Box
+          position="absolute"
+          top={0}
+          left={0}
+          bottom={0}
+          w="280px"
+          bg="white"
+          zIndex={999}
+          transform={isOpen ? "translateX(0)" : "translateX(-100%)"}
+          transition="transform 0.3s ease-in-out"
+          boxShadow="xl"
+          display="flex"
+          flexDirection="column"
+        >
+          <Box
+            p={4}
+            bgGradient="linear(to-r, purple.500, pink.400, red.400)"
+            color="white"
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+          >
+            <Heading size="md">メニュー</Heading>
+            <CloseButton
+              onClick={onClose}
+              color="white"
+              _hover={{ bg: 'whiteAlpha.200' }}
+            />
+          </Box>
+
+          <Box
+            flex={1}
+            overflowY="auto"
+            p={4}
+            css={{ '&::-webkit-scrollbar': { display: 'none' } }}
+          >
+            <VStack align="start" spacing={4}>
+              {/* 過去の投稿履歴（まだ実装前なのでプレースホルダ） */}
+              <Box width="100%">
+                <Heading size="sm" mb={1}>過去の投稿履歴</Heading>
+                <Text fontSize="sm" color="gray.600">
+                  まだ投稿機能がないため、履歴は表示できません。
+                </Text>
+              </Box>
+
+              <Divider />
+
+              {/* 性格診断の詳細（最新結果） */}
+              <Box width="100%">
+                <Heading size="sm" mb={1}>性格診断の詳細</Heading>
+                {user && user.scores && user.music_type ? (
+                  <VStack align="start" spacing={1} fontSize="sm">
+                    <Text>現在のタイプコード: <b>{user.music_type.code}</b></Text>
+                    <Text>タイプ名: {user.music_type.name}</Text>
+                    <Text>V-C: {user.scores.VC.toFixed(2)}</Text>
+                    <Text>M-A: {user.scores.MA.toFixed(2)}</Text>
+                    <Text>P-R: {user.scores.PR.toFixed(2)}</Text>
+                    <Text>H-S: {user.scores.HS.toFixed(2)}</Text>
+                  </VStack>
+                ) : (
+                  <Text fontSize="sm" color="gray.600">
+                    まだ診断結果が登録されていません。曲に「いいね」したり、診断からプロフィールを作成してみましょう。
+                  </Text>
+                )}
+              </Box>
+
+              <Divider />
+
+              {/* MBTI診断の履歴（バックエンド未実装のためプレースホルダ） */}
+              <Box width="100%">
+                <Heading size="sm" mb={1}>MBTI診断の履歴</Heading>
+                <Text fontSize="sm" color="gray.600">
+                  履歴表示は今後のアップデートで対応予定です。現在のタイプはプロフィール画面から確認できます。
+                </Text>
+              </Box>
+            </VStack>
+          </Box>
         </Box>
 
       </Container>

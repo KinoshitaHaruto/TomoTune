@@ -1,9 +1,9 @@
 from database import engine, SessionLocal, Base
-from models import User, Song
-from data import songs, users
+from models import User, Song, MusicType
+from data import songs, users, music_types
 import os
 
-BASE_URL = "http://127.0.0.1:8000"
+# BASE_URL = "http://127.0.0.1:8000"
 def init_database():
     print("データベース構築を開始...")
 
@@ -25,7 +25,7 @@ def init_database():
                 new_user = User(
                     id=u["id"],
                     name=u["name"],
-                    mbti=u["mbti"]
+                    music_type_code=u["music_type_code"]
                 )
                 db.add(new_user)
                 print(f"ユーザー追加: {u['name']}")
@@ -45,6 +45,25 @@ def init_database():
                 db.add(new_song)
                 print(f"曲追加: {s['title']}")
         
+        # --- Music Typeの登録 ---
+        for t in music_types:
+            existing = db.query(MusicType).filter(MusicType.code == t["code"]).first()
+            
+            if existing:
+                # 更新 (CSVの内容で上書き)
+                existing.name = t["name"]
+                existing.description = t["description"]
+                print(f"タイプ更新: {t['code']}")
+            else:
+                # 新規作成
+                new_type = MusicType(
+                    code=t["code"],
+                    name=t["name"],
+                    description=t["description"]
+                )
+                db.add(new_type)
+                print(f"タイプ追加: {t['code']}")
+
         # まとめて保存 (コミット)
         db.commit()
         print("データベースの初期化が完了")
