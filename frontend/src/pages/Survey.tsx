@@ -7,10 +7,10 @@ interface Answer {
 }
 
 interface MusicProfile {
-  V_C: number // ノリ（V）vs 静けさ（C）
-  M_A: number // メロディ（M）vs 世界観（A）
-  P_R: number // 技術（P）vs 感情（R）
-  H_S: number // 生音（H）vs 電子音（S）
+  V_C: number // ノリ（Valence）vs 静けさ（Calm）
+  M_A: number // メロディ（Melody）vs 世界観（Atmosphere）
+  P_R: number // 情熱的（Passion）vs 落ち着き（Relax）
+  H_S: number // 生音（Human）vs 電子音（Synth）
 }
 
 function Survey() {

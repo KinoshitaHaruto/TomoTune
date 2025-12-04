@@ -112,6 +112,6 @@ users = [
     {
         "id" : "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
         "name" : "Test User",
-        "mbti" : "AAAA"
+        "music_type_code" : "VMPH"
     }
 ]

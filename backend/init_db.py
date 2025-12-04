@@ -25,7 +25,7 @@ def init_database():
                 new_user = User(
                     id=u["id"],
                     name=u["name"],
-                    mbti=u["mbti"]
+                    music_type_code=u["music_type_code"]
                 )
                 db.add(new_user)
                 print(f"ユーザー追加: {u['name']}")
@@ -53,7 +53,7 @@ def init_database():
                 # 更新 (CSVの内容で上書き)
                 existing.name = t["name"]
                 existing.description = t["description"]
-                print(f"🔄 タイプ更新: {t['code']}")
+                print(f"タイプ更新: {t['code']}")
             else:
                 # 新規作成
                 new_type = MusicType(
