@@ -1,7 +1,21 @@
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Box, Heading, Text, VStack, Stack, Card, CardBody, Divider, useToast, Badge } from '@chakra-ui/react'
+import {
+  Box,
+  Heading,
+  Text,
+  VStack,
+  Stack,
+  Card,
+  CardBody,
+  Divider,
+  useToast,
+  Badge,
+  HStack,
+  Switch,
+} from '@chakra-ui/react'
 import LikeButton from '../components/LikeButton'
+import { API_BASE } from '../config'
 
 type Song = {
   id: number
@@ -10,16 +24,10 @@ type Song = {
   url: string
 }
 
-type LikeLog = {
-  id: number
-  user_id: string
-  song_id: number
-  timestamp: string
-}
-
 function Music() {
-  const [favoriteSongs, setFavoriteSongs] = useState<Song[]>([])
-  const [likeCount, setLikeCount] = useState<{ [key: number]: number }>({})
+  const [songs, setSongs] = useState<Song[]>([])
+  const [favoriteIds, setFavoriteIds] = useState<number[]>([])
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false)
   const navigate = useNavigate()
   const toast = useToast()
   const userId = localStorage.getItem('tomo_user_id')
@@ -31,110 +39,71 @@ function Music() {
     }
   }, [])
 
-  // ユーザーのいいね履歴を取得してお気に入り曲を抽出
+  // 全曲取得
   useEffect(() => {
-    if (!userId) return
-
-    // バックエンド API から全曲とユーザーのいいね履歴を取得（未実装の場合は localStorage で管理）
-    const savedLikes = localStorage.getItem(`tomo_user_likes_${userId}`)
-    if (savedLikes) {
-      try {
-        const likes = JSON.parse(savedLikes)
-        const songLikeCount: { [key: number]: number } = {}
-        
-        // 曲ごとにいいね数をカウント
-        likes.forEach((like: { song_id: number }) => {
-          songLikeCount[like.song_id] = (songLikeCount[like.song_id] || 0) + 1
-        })
-
-        setLikeCount(songLikeCount)
-
-        // お気に入り曲（5回以上いいね）を抽出
-        const favoriteIds = Object.entries(songLikeCount)
-          .filter(([_, count]) => count >= 5)
-          .map(([id, _]) => parseInt(id))
-
-        // 曲情報を取得
-        fetch('http://127.0.0.1:8000/songs')
-          .then((res) => res.json())
-          .then((data: Song[]) => {
-            const filtered = data.filter((song) => favoriteIds.includes(song.id))
-            setFavoriteSongs(filtered)
-          })
-          .catch((err) => {
-            console.error('曲リストの取得に失敗:', err)
-            toast({ title: '曲リストの読み込みエラー', status: 'error' })
-          })
-      } catch (err) {
-        console.error('いいね履歴の解析に失敗:', err)
-      }
-    } else {
-      // いいね履歴がない場合は空表示
-      setFavoriteSongs([])
-    }
-  }, [userId])
-
-  const handleLike = (songId: number) => {
-    if (!userId) return
-
-    // localStorage に いいね を記録（バックエンド API の準備中）
-    const savedLikes = localStorage.getItem(`tomo_user_likes_${userId}`)
-    const likes = savedLikes ? JSON.parse(savedLikes) : []
-    likes.push({ song_id: songId, timestamp: new Date().toISOString() })
-    localStorage.setItem(`tomo_user_likes_${userId}`, JSON.stringify(likes))
-
-    // いいね数をアップデート
-    const newCount = (likeCount[songId] || 0) + 1
-    setLikeCount({ ...likeCount, [songId]: newCount })
-
-    if (newCount === 5) {
-      toast({
-        title: 'Congratulations! 🎉',
-        description: 'お気に入りに登録されました！',
-        status: 'success',
-        duration: 3000,
-        isClosable: true,
-        position: 'top',
-        containerStyle: { marginTop: '40px' },
+    fetch(`${API_BASE}/songs`)
+      .then((res) => res.json())
+      .then((data: Song[]) => {
+        setSongs(data)
       })
+      .catch((err) => {
+        console.error('曲リストの取得に失敗:', err)
+        toast({ title: '曲リストの読み込みエラー', status: 'error' })
+      })
+  }, [])
 
-      // 画面を更新
-      setFavoriteSongs((prev) => {
-        const song = prev.find((s) => s.id === songId)
-        if (song && !favoriteSongs.find((s) => s.id === songId)) {
-          return [...prev, song]
-        }
-        return prev
+  const handleLikeSuccess = (songId: number, _total: number, isMilestone: boolean) => {
+    if (isMilestone) {
+      setFavoriteIds((prev) => {
+        if (prev.includes(songId)) return prev
+        return [...prev, songId]
       })
     }
   }
 
-  return (
-    <VStack spacing={4}>
-      <Heading color="pink.400" size="lg">
-        お気に入り
-      </Heading>
-      <Text color="gray.500" fontSize="sm">
-        5回以上いいねした曲が表示されます
-      </Text>
+  const displayedSongs = showFavoritesOnly
+    ? songs.filter((song) => favoriteIds.includes(song.id))
+    : songs
 
-      {favoriteSongs.length === 0 ? (
-        <Box textAlign="center" py={10}>
-          <Text color="gray.500">お気に入り曲はまだありません</Text>
-          <Text color="gray.400" fontSize="sm" mt={2}>
-            ホームで曲を5回いいねするとここに表示されます
+  return (
+    <VStack spacing={4} align="stretch">
+      <HStack justify="space-between" align="center">
+        <Heading color="pink.400" size="lg">
+          {showFavoritesOnly ? 'お気に入りの曲' : 'すべての曲'}
+        </Heading>
+        <HStack spacing={2} align="center">
+          <Text fontSize="sm" color="gray.600">
+            お気に入りだけ
           </Text>
+          <Switch
+            colorScheme="pink"
+            isChecked={showFavoritesOnly}
+            onChange={(e) => setShowFavoritesOnly(e.target.checked)}
+          />
+        </HStack>
+      </HStack>
+
+      {displayedSongs.length === 0 ? (
+        <Box textAlign="center" py={10}>
+          <Text color="gray.500">
+            {showFavoritesOnly ? 'お気に入り曲はまだありません' : '曲が見つかりません'}
+          </Text>
+          {showFavoritesOnly && (
+            <Text color="gray.400" fontSize="sm" mt={2}>
+              曲を5回いいねすると、お気に入りとしてここに表示されます
+            </Text>
+          )}
         </Box>
       ) : (
-        favoriteSongs.map((song) => (
+        displayedSongs.map((song) => (
           <Card
             key={song.id}
             w="100%"
             shadow="sm"
             borderRadius="lg"
-            border="2px solid"
-            borderColor="pink.200"
-            bg="pink.50"
+            border="1px solid"
+            borderColor={favoriteIds.includes(song.id) ? 'pink.300' : 'gray.200'}
+            bg={favoriteIds.includes(song.id) ? 'pink.50' : 'white'}
           >
             <CardBody p={4}>
               <Stack spacing={3}>
@@ -145,9 +114,11 @@ function Music() {
                       {song.artist}
                     </Text>
                   </Box>
-                  <Badge colorScheme="pink" fontSize="sm">
-                    ♥ {likeCount[song.id] || 5}
-                  </Badge>
+                  {favoriteIds.includes(song.id) && (
+                    <Badge colorScheme="pink" fontSize="xs">
+                      お気に入り
+                    </Badge>
+                  )}
                 </Box>
 
                 <Divider />
@@ -170,7 +141,13 @@ function Music() {
                     )}
                   </Box>
 
-                  <LikeButton songId={song.id} onClick={handleLike} ml="auto" />
+                  <LikeButton
+                    songId={song.id}
+                    ml="auto"
+                    onLikeSuccess={(total, isMilestone) =>
+                      handleLikeSuccess(song.id, total, isMilestone)
+                    }
+                  />
                 </Box>
               </Stack>
             </CardBody>
