@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Box,
@@ -11,17 +11,38 @@ import {
   Stack,
   Divider,
 } from '@chakra-ui/react'
-import LikeButton from './LikeButton'
+import LikeButton from '../components/LikeButton'
+import { API_BASE } from '../config'
 
 function Home() {
   const navigate = useNavigate()
 
-  // ログインチェック
+  // ===== 必要な state を追加 =====
+  const [songs, setSongs] = useState<any[]>([])
+  const [openSongID, setOpenSongID] = useState<number | null>(null)
+
+  // いいね（今回は Home 側で何もしないので空）
+  const handleLike = () => {}
+
+  // コメント押した時
+  const handleComment = (songId: number) => {
+    setOpenSongID(songId)
+  }
+
+  // ===== ログインチェック =====
   useEffect(() => {
     const userId = localStorage.getItem('tomo_user_id')
     if (!userId) {
       navigate('/login')
     }
+  }, [])
+
+  // ===== 曲の読み込み（本番API）=====
+  useEffect(() => {
+    fetch(`${API_BASE}/songs`)
+      .then((res) => res.json())
+      .then((data) => setSongs(data))
+      .catch((err) => console.error("曲取得エラー:", err))
   }, [])
 
   return (
@@ -52,7 +73,11 @@ function Home() {
                     {song.url ? (
                       <audio
                         controls
-                        src={song.url}
+                        src={
+                          song.url.startsWith("http")
+                            ? song.url
+                            : `${API_BASE}${song.url}`
+                        }
                         style={{ width: '100%' }}
                         controlsList="nodownload noplaybackrate"
                       >
@@ -86,7 +111,7 @@ function Home() {
         ))}
       </VStack>
 
-      {/* コメント Drawer */}
+      {/* ===== コメント Drawer ===== */}
       <Box
         position="fixed"
         bottom={0}

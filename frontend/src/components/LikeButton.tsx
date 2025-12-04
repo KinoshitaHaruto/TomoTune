@@ -35,7 +35,7 @@ const FlyingHeart = () => {
 // --- LikeButton本体 ---
 
 type LikeButtonProps = {
-    songId: number;
+    songId: number | string;
     // 親側で「見た目のカウント」やマイルストーン検知をしたい場合に使う
     onLikeSuccess?: (newTotal: number, isMilestone: boolean) => void; 
     [key: string]: any; 
