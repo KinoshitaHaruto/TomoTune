@@ -3,7 +3,7 @@ import json
 from fastapi import FastAPI, Depends, status, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from pydantic import BaseModel
 import os
 
@@ -76,6 +76,40 @@ def login(req: LoginRequest, db: Session = Depends(get_db)):
     
     # ユーザー情報を返す
     return user
+
+# 診断結果受け取り用モデル
+class DiagnosisRequest(BaseModel):
+    user_id: str
+    score_vc: float # 0.0 - 1.0
+    score_ma: float
+    score_pr: float
+    score_hs: float
+
+# 診断結果保存API
+@app.post("/diagnosis")
+def save_diagnosis(req: DiagnosisRequest, db: Session = Depends(get_db)):
+    user = crud.get_user_by_id(db, req.user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # 1. スコアを更新
+    user.score_vc = req.score_vc
+    user.score_ma = req.score_ma
+    user.score_pr = req.score_pr
+    user.score_hs = req.score_hs
+
+    # 2. タイプコードを判定 (typeCal再利用)
+    new_code = typeCal.determine_music_type_code(
+        req.score_vc, req.score_ma, req.score_pr, req.score_hs
+    )
+    user.music_type_code = new_code
+
+    db.add(user)
+    db.commit()
+    
+    logger.info(f"📝 Diagnosis Updated: {user.name} -> {new_code}")
+
+    return {"status": "ok", "music_type_code": new_code}
 
 # 詳細取得用API (Profile画面用)
 @app.get("/users/{user_id}")

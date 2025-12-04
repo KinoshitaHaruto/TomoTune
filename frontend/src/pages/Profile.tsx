@@ -30,45 +30,22 @@ import { FiEdit2, FiCheck } from 'react-icons/fi'
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import { QRCodeSVG } from 'qrcode.react'
-
-interface MusicProfile {
-  V_C: number
-  M_A: number
-  P_R: number
-  H_S: number
-}
-
-type FollowEntry = {
-  userId: string
-  profileCode?: string
-}
+import { MusicTypeCard } from '../components/MusicTypeCard'
+import { useUser } from '../contexts/UserContext'
 
 function Profile() {
   const [userName, setUserName] = useState('')
   const [userId, setUserId] = useState('')
-  const [musicProfile, setMusicProfile] = useState<MusicProfile | null>(null)
-  const [profileCode, setProfileCode] = useState('')
   const [followers] = useState(0)
-  const [following, setFollowing] = useState(0)
+  const [following] = useState(0)
   const [tags, setTags] = useState(['ライブガチ勢', '回担担否！！', '気志圏'])
   const [isEditingProfile, setIsEditingProfile] = useState(false)
   const [editingTags, setEditingTags] = useState('ライブガチ勢, 回担担否！！, 気志圏')
   const [newTag, setNewTag] = useState('')
-  const [followList, setFollowList] = useState<FollowEntry[]>([])
   const shareModal = useDisclosure()
   const navigate = useNavigate()
   const toast = useToast()
-
-  // 4文字コードを生成
-  const getProfileCode = (profile: MusicProfile): string => {
-    const code = [
-      profile.V_C >= 0 ? 'V' : 'C',
-      profile.M_A >= 0 ? 'M' : 'A',
-      profile.P_R >= 0 ? 'P' : 'R',
-      profile.H_S >= 0 ? 'H' : 'S',
-    ].join('')
-    return code
-  }
+  const { user } = useUser()
 
   // プロフィールコードに対応する絵文字を返す
   const getProfileEmoji = (code: string): string => {
@@ -95,18 +72,6 @@ function Profile() {
 
     setUserId(userId)
     setUserName(name)
-
-    // 音楽プロフィールを取得
-    const savedProfile = localStorage.getItem('tomo_music_profile')
-    if (savedProfile) {
-      try {
-        const profile = JSON.parse(savedProfile) as MusicProfile
-        setMusicProfile(profile)
-        setProfileCode(getProfileCode(profile))
-      } catch (err) {
-        console.error('プロフィール解析エラー:', err)
-      }
-    }
 
     // localStorage からタグを取得
     const savedTags = localStorage.getItem('tomo_profile_tags')
@@ -155,7 +120,8 @@ function Profile() {
     localStorage.setItem('tomo_profile_tags', JSON.stringify(updatedTags))
   }
 
-  const avatarEmoji = musicProfile ? getProfileEmoji(profileCode) : '🎵'
+  const profileCode = user?.music_type?.code || ''
+  const avatarEmoji = profileCode ? getProfileEmoji(profileCode) : '🎵'
 
   // QRペイロード
   const qrPayload = userId
@@ -219,90 +185,117 @@ function Profile() {
 
       <Divider />
 
-      {/* 音楽プロフィール */}
-      {musicProfile ? (
-        <Box
-          width="100%"
-          bg="blue.50"
-          p={6}
-          borderRadius="lg"
-          boxShadow="sm"
-          border="2px solid"
-          borderColor="blue.200"
-        >
-          <VStack spacing={4} align="start" width="100%">
-            <HStack width="100%" justify="space-between">
-              <Heading size="lg" color="blue.600">
-                {profileCode}
-              </Heading>
-              <IconButton
-                aria-label={isEditingProfile ? '完了' : '編集'}
-                icon={isEditingProfile ? <FiCheck /> : <FiEdit2 />}
-                colorScheme={isEditingProfile ? 'green' : 'blue'}
-                variant="ghost"
-                onClick={() => {
-                  if (isEditingProfile) {
-                    handleSaveProfile()
-                  } else {
-                    setIsEditingProfile(true)
-                  }
-                }}
-              />
-            </HStack>
-
-            {!isEditingProfile ? (
-              <VStack spacing={2} width="100%" align="start">
-                <HStack spacing={2} flexWrap="wrap" width="100%">
-                  {tags.map((tag, idx) => (
-                    <Badge
-                      key={idx}
-                      variant="solid"
-                      colorScheme="blue"
-                      display="flex"
-                      alignItems="center"
-                      gap={1}
-                    >
-                      # {tag}
-                      <CloseButton size="sm" onClick={() => handleRemoveTag(idx)} />
-                    </Badge>
-                  ))}
-                </HStack>
-              </VStack>
-            ) : (
-              <VStack spacing={3} width="100%">
-                <Box width="100%">
-                  <Text fontSize="xs" color="gray.600" mb={1}>
-                    タグ（カンマ区切り）
-                  </Text>
-                  <Textarea
-                    value={editingTags}
-                    onChange={(e) => setEditingTags(e.target.value)}
-                    size="sm"
-                    minH="80px"
-                    bg="white"
-                  />
-                </Box>
-
-                <HStack spacing={2} width="100%">
-                  <Button size="sm" colorScheme="green" flex={1} onClick={handleSaveProfile}>
-                    保存
-                  </Button>
-                  <Button size="sm" variant="outline" flex={1} onClick={handleCancelEdit}>
-                    キャンセル
-                  </Button>
-                </HStack>
-              </VStack>
-            )}
-          </VStack>
-        </Box>
-      ) : (
-        <Box width="100%" bg="gray.50" p={6} borderRadius="lg" textAlign="center">
-          <Text color="gray.500">音楽プロフィールを設定してください</Text>
-          <Button colorScheme="pink" size="sm" mt={4} onClick={() => navigate('/survey')}>
-            設定する
+      {/* Music Type セクション */}
+      
+      <VStack spacing={4} align="stretch" width="100%">
+        <MusicTypeCard />
+        {!user?.music_type && (
+          <Button
+            colorScheme="pink"
+            size="sm"
+            alignSelf="center"
+            onClick={() => navigate('/survey')}
+          >
+            診断してみる
           </Button>
-        </Box>
-      )}
+        )}
+      </VStack>
+
+      {/* タグ管理セクション */}
+      <Box
+        width="100%"
+        bg="white"
+        p={6}
+        borderRadius="lg"
+        boxShadow="sm"
+        border="1px solid"
+        borderColor="gray.200"
+      >
+        <VStack spacing={4} align="stretch" width="100%">
+          <HStack justify="space-between">
+            <Heading size="md" color="gray.700">
+              推しタグ
+            </Heading>
+            <IconButton
+              aria-label={isEditingProfile ? '完了' : '編集'}
+              icon={isEditingProfile ? <FiCheck /> : <FiEdit2 />}
+              colorScheme={isEditingProfile ? 'green' : 'blue'}
+              variant="ghost"
+              onClick={() => {
+                if (isEditingProfile) {
+                  handleSaveProfile()
+                } else {
+                  setIsEditingProfile(true)
+                }
+              }}
+            />
+          </HStack>
+
+          {isEditingProfile ? (
+            <VStack spacing={3} width="100%">
+              <Box width="100%">
+                <Text fontSize="xs" color="gray.600" mb={1}>
+                  タグ（カンマ区切り）
+                </Text>
+                <Textarea
+                  value={editingTags}
+                  onChange={(e) => setEditingTags(e.target.value)}
+                  placeholder=""
+                  size="sm"
+                  minH="80px"
+                  bg="gray.50"
+                />
+              </Box>
+
+              <HStack spacing={2} width="100%">
+                <Button
+                  size="sm"
+                  colorScheme="green"
+                  flex={1}
+                  onClick={handleSaveProfile}
+                >
+                  保存
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  flex={1}
+                  onClick={handleCancelEdit}
+                >
+                  キャンセル
+                </Button>
+              </HStack>
+            </VStack>
+          ) : (
+            <VStack spacing={2} width="100%" align="start">
+              <HStack spacing={2} flexWrap="wrap" width="100%">
+                {tags.map((tag, idx) => (
+                  <Badge
+                    key={idx}
+                    variant="solid"
+                    colorScheme="blue"
+                    display="flex"
+                    alignItems="center"
+                    gap={1}
+                  >
+                    # {tag}
+                    <CloseButton
+                      size="sm"
+                      onClick={() => handleRemoveTag(idx)}
+                      ml={1}
+                    />
+                  </Badge>
+                ))}
+              </HStack>
+              {tags.length === 0 && (
+                <Text fontSize="sm" color="gray.500">
+                  タグがありません。編集ボタンから追加してみましょう。
+                </Text>
+              )}
+            </VStack>
+          )}
+        </VStack>
+      </Box>
 
       <Divider />
 

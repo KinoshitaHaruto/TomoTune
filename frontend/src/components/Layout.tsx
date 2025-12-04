@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { 
   Box, 
@@ -14,67 +14,19 @@ import {
   CloseButton,
 } from '@chakra-ui/react'
 import { FiHome, FiPlus, FiMusic, FiUser, FiMenu } from 'react-icons/fi'
-
-type MusicProfile = {
-  V_C: number
-  M_A: number
-  P_R: number
-  H_S: number
-}
-
-type MbtiHistoryEntry = {
-  timestamp: string
-  code: string
-}
+import { useUser } from '../contexts/UserContext'
 
 const Layout = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const toast = useToast()
   const { isOpen, onOpen, onClose } = useDisclosure()
-
-  const [musicProfile, setMusicProfile] = useState<MusicProfile | null>(null)
-  const [profileCode, setProfileCode] = useState('')
-  const [mbtiHistory, setMbtiHistory] = useState<MbtiHistoryEntry[]>([])
-
-  const getProfileCode = (profile: MusicProfile): string => {
-    const code = [
-      profile.V_C >= 0 ? 'V' : 'C',
-      profile.M_A >= 0 ? 'M' : 'A',
-      profile.P_R >= 0 ? 'P' : 'R',
-      profile.H_S >= 0 ? 'H' : 'S',
-    ].join('')
-    return code
-  }
-
-  useEffect(() => {
-    // 最新の診断結果
-    const savedProfile = localStorage.getItem('tomo_music_profile')
-    if (savedProfile) {
-      try {
-        const parsed = JSON.parse(savedProfile) as MusicProfile
-        setMusicProfile(parsed)
-        setProfileCode(getProfileCode(parsed))
-      } catch (e) {
-        console.error('診断プロフィール解析エラー', e)
-      }
-    }
-
-    // 診断履歴
-    const savedHistory = localStorage.getItem('tomo_music_profile_history')
-    if (savedHistory) {
-      try {
-        const parsed = JSON.parse(savedHistory) as MbtiHistoryEntry[]
-        setMbtiHistory(parsed)
-      } catch (e) {
-        console.error('診断履歴解析エラー', e)
-      }
-    }
-  }, [])
+  const { user } = useUser()
 
   const handleLogout = () => {
     localStorage.removeItem("tomo_user_id")
     localStorage.removeItem("tomo_user_name")
+    toast({ title: 'ログアウトしました', status: 'info' })
     navigate("/login")
   }
 
@@ -241,39 +193,30 @@ const Layout = () => {
               {/* 性格診断の詳細（最新結果） */}
               <Box width="100%">
                 <Heading size="sm" mb={1}>性格診断の詳細</Heading>
-                {musicProfile ? (
+                {user && user.scores && user.music_type ? (
                   <VStack align="start" spacing={1} fontSize="sm">
-                    <Text>現在のタイプコード: <b>{profileCode}</b></Text>
-                    <Text>V-C: {musicProfile.V_C}</Text>
-                    <Text>M-A: {musicProfile.M_A}</Text>
-                    <Text>P-R: {musicProfile.P_R}</Text>
-                    <Text>H-S: {musicProfile.H_S}</Text>
+                    <Text>現在のタイプコード: <b>{user.music_type.code}</b></Text>
+                    <Text>タイプ名: {user.music_type.name}</Text>
+                    <Text>V-C: {user.scores.VC.toFixed(2)}</Text>
+                    <Text>M-A: {user.scores.MA.toFixed(2)}</Text>
+                    <Text>P-R: {user.scores.PR.toFixed(2)}</Text>
+                    <Text>H-S: {user.scores.HS.toFixed(2)}</Text>
                   </VStack>
                 ) : (
                   <Text fontSize="sm" color="gray.600">
-                    まだ診断結果が登録されていません。
+                    まだ診断結果が登録されていません。曲に「いいね」したり、診断からプロフィールを作成してみましょう。
                   </Text>
                 )}
               </Box>
 
               <Divider />
 
-              {/* MBTI診断の履歴 */}
+              {/* MBTI診断の履歴（バックエンド未実装のためプレースホルダ） */}
               <Box width="100%">
                 <Heading size="sm" mb={1}>MBTI診断の履歴</Heading>
-                {mbtiHistory.length > 0 ? (
-                  <VStack align="start" spacing={1} fontSize="sm">
-                    {mbtiHistory.map((entry, idx) => (
-                      <Text key={idx}>
-                        {new Date(entry.timestamp).toLocaleString()} : <b>{entry.code}</b>
-                      </Text>
-                    ))}
-                  </VStack>
-                ) : (
-                  <Text fontSize="sm" color="gray.600">
-                    まだ診断履歴がありません。
-                  </Text>
-                )}
+                <Text fontSize="sm" color="gray.600">
+                  履歴表示は今後のアップデートで対応予定です。現在のタイプはプロフィール画面から確認できます。
+                </Text>
               </Box>
             </VStack>
           </Box>
