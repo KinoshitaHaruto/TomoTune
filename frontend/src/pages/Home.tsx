@@ -1,7 +1,17 @@
-import React from 'react'
-import { useEffect } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
-import { Box, Heading, Text, Button, VStack } from '@chakra-ui/react'
+import React, { useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import {
+  Box,
+  Heading,
+  Text,
+  Button,
+  VStack,
+  Card,
+  CardBody,
+  Stack,
+  Divider,
+} from '@chakra-ui/react'
+import LikeButton from './LikeButton'
 
 function Home() {
   const navigate = useNavigate()
@@ -15,24 +25,99 @@ function Home() {
   }, [])
 
   return (
-    <VStack spacing={6} align="stretch">
-      <Heading size="lg" color="pink.400">
-        TomoTune へようこそ
-      </Heading>
-      <Text color="gray.600" fontSize="sm">
-        曲を聴いて気に入った曲のハートボタンを押そう！Music Type がどんどん今のあなたに近づいていきます！（投稿見れる画面）
-      </Text>
-      <Box>
-        <Button
-          as={Link}
-          to="/music"
-          colorScheme="pink"
-          width="100%"
-        >
-          曲一覧へ
+    <>
+      <VStack spacing={4}>
+        {songs.map((song) => (
+          <Card
+            key={song.id}
+            w="100%"
+            shadow="sm"
+            borderRadius="lg"
+            border="1px solid"
+            borderColor="gray.200"
+          >
+            <CardBody p={4}>
+              <Stack spacing={3}>
+                <Box>
+                  <Heading size="md">{song.title}</Heading>
+                  <Text color="gray.500" fontSize="sm">
+                    {song.artist}
+                  </Text>
+                </Box>
+
+                <Divider />
+
+                <Box display="flex" alignItems="center">
+                  <Box flex={1}>
+                    {song.url ? (
+                      <audio
+                        controls
+                        src={song.url}
+                        style={{ width: '100%' }}
+                        controlsList="nodownload noplaybackrate"
+                      >
+                        オーディオ非対応
+                      </audio>
+                    ) : (
+                      <Text color="red.400" fontSize="sm">
+                        ※ 音声ファイルがありません
+                      </Text>
+                    )}
+                  </Box>
+
+                  <LikeButton
+                    songId={song.id}
+                    onClick={handleLike}
+                    ml="auto"
+                  />
+
+                  <Button
+                    bg="#ff78b5ff"
+                    color="white"
+                    ml={3}
+                    onClick={() => handleComment(song.id)}
+                  >
+                    コメント
+                  </Button>
+                </Box>
+              </Stack>
+            </CardBody>
+          </Card>
+        ))}
+      </VStack>
+
+      {/* コメント Drawer */}
+      <Box
+        position="fixed"
+        bottom={0}
+        left="50%"
+        transform="translateX(-50%)"
+        width="100%"
+        maxW="480px"
+        bg="white"
+        borderTopRadius="24px"
+        boxShadow="0 -4px 12px rgba(0,0,0,0.15)"
+        maxH="55vh"
+        overflowY="auto"
+        zIndex={2000}
+        p={4}
+        display={openSongID ? 'block' : 'none'}
+      >
+        <Text fontWeight="bold" mb={3}>
+          投稿ID: {openSongID}
+        </Text>
+
+        <VStack align="start" spacing={3}>
+          <Text>・めっちゃいい曲！</Text>
+          <Text>・歌詞がしみる…</Text>
+          <Text>・声好きすぎる</Text>
+        </VStack>
+
+        <Button mt={4} onClick={() => setOpenSongID(null)} w="100%">
+          閉じる
         </Button>
       </Box>
-    </VStack>
+    </>
   )
 }
 
