@@ -56,7 +56,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         body: JSON.stringify({ name }),
       });
       const data = await res.json();
-
+      
       // /login は最小限のユーザー情報を返すので、id だけ保存してから
       // /users/{id} を叩いて User 型に揃えたデータを取得する
       localStorage.setItem("tomo_user_id", data.id);

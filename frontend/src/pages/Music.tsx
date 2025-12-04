@@ -5,16 +5,11 @@ import {
   Heading,
   Text,
   VStack,
-  Stack,
-  Card,
-  CardBody,
-  Divider,
   useToast,
-  Badge,
   HStack,
   Switch,
 } from '@chakra-ui/react'
-import LikeButton from '../components/LikeButton'
+import MusicCard from '../components/MusicCard'
 import { API_BASE } from '../config'
 
 type Song = {
@@ -51,6 +46,22 @@ function Music() {
         toast({ title: '曲リストの読み込みエラー', status: 'error' })
       })
   }, [])
+
+  // お気に入り曲IDをバックエンドから取得（リロード時にも復元）
+  useEffect(() => {
+    if (!userId) return
+    fetch(`${API_BASE}/favorites/${userId}`)
+      .then((res) => {
+        if (!res.ok) throw new Error('favorites fetch failed')
+        return res.json()
+      })
+      .then((data: { song_ids: number[] }) => {
+        setFavoriteIds(data.song_ids || [])
+      })
+      .catch((err) => {
+        console.error('お気に入りの取得に失敗:', err)
+      })
+  }, [userId])
 
   const handleLikeSuccess = (songId: number, _total: number, isMilestone: boolean) => {
     if (isMilestone) {
@@ -96,66 +107,14 @@ function Music() {
         </Box>
       ) : (
         displayedSongs.map((song) => (
-          <Card
+          <MusicCard
             key={song.id}
-            w="100%"
-            shadow="sm"
-            borderRadius="lg"
-            border="1px solid"
-            borderColor={favoriteIds.includes(song.id) ? 'pink.300' : 'gray.200'}
-            bg={favoriteIds.includes(song.id) ? 'pink.50' : 'white'}
-          >
-            <CardBody p={4}>
-              <Stack spacing={3}>
-                <Box display="flex" alignItems="center" justifyContent="space-between">
-                  <Box>
-                    <Heading size="md">{song.title}</Heading>
-                    <Text color="gray.500" fontSize="sm">
-                      {song.artist}
-                    </Text>
-                  </Box>
-                  {favoriteIds.includes(song.id) && (
-                    <Badge colorScheme="pink" fontSize="xs">
-                      お気に入り
-                    </Badge>
-                  )}
-                </Box>
-
-                <Divider />
-
-                <Box display="flex" alignItems="center">
-                  <Box flex={1}>
-                    {song.url ? (
-                      <audio
-                        controls
-                        src={
-                          song.url.startsWith('http')
-                            ? song.url
-                            : `${API_BASE || ''}${song.url}`
-                        }
-                        style={{ width: '100%' }}
-                        controlsList="nodownload noplaybackrate"
-                      >
-                        オーディオ非対応
-                      </audio>
-                    ) : (
-                      <Text color="red.400" fontSize="sm">
-                        ※ 音声ファイルがありません
-                      </Text>
-                    )}
-                  </Box>
-
-                  <LikeButton
-                    songId={song.id}
-                    ml="auto"
-                    onLikeSuccess={(total, isMilestone) =>
-                      handleLikeSuccess(song.id, total, isMilestone)
-                    }
-                  />
-                </Box>
-              </Stack>
-            </CardBody>
-          </Card>
+            song={song}
+            isFavorite={favoriteIds.includes(song.id)}
+            onLikeSuccess={(total, isMilestone) =>
+              handleLikeSuccess(song.id, total, isMilestone)
+            }
+          />
         ))
       )}
     </VStack>

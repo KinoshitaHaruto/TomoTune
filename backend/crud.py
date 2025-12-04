@@ -71,6 +71,20 @@ def count_likes(db: Session, song_id: int, user_id: str) -> int:
     ).count()
 
 
+def get_favorite_song_ids(db: Session, user_id: str, threshold: int = 5):
+    """
+    特定ユーザーが、threshold回以上いいねした曲ID一覧を返す
+    """
+    rows = (
+        db.query(LikeLog.song_id, func.count(LikeLog.id).label("c"))
+        .filter(LikeLog.user_id == user_id)
+        .group_by(LikeLog.song_id)
+        .having(func.count(LikeLog.id) >= threshold)
+        .all()
+    )
+    return [row[0] for row in rows]
+
+
 # --- 投稿の操作 ---
 
 def create_post(db: Session, user_id: str, song_id: int, comment: str) -> Post:

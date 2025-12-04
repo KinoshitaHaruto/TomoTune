@@ -181,15 +181,18 @@ def create_like(like: LikeRequest, db: Session = Depends(get_db)):
     # 集計
     total = crud.count_likes(db, like.song_id, user.id)
     
-    # 5回目以降は常に「お気に入り扱い」とする
-    is_milestone = (total >= LIKE_MILESTONE)
+    # 5回以上押されていれば「お気に入り扱い」
+    is_favorite = (total >= LIKE_MILESTONE)
+    # ちょうど5回目のときだけ「マイルストーン達成」とする（トースト用）
+    just_reached_milestone = (total == LIKE_MILESTONE)
 
     logger.info(f"[❤️]: User: {user.name} | SongID: {like.song_id} | Total: {total}")
 
     return {
         "status": "ok", 
         "total_likes": total, 
-        "is_milestone": is_milestone,
+        "is_milestone": just_reached_milestone,
+        "is_favorite": is_favorite,
         "user_music_type": user.music_type_code, 
         "scores": {
             "VC": user.score_vc,
@@ -198,6 +201,19 @@ def create_like(like: LikeRequest, db: Session = Depends(get_db)):
             "HS": user.score_hs
         }
     }
+
+
+@app.get("/favorites/{user_id}")
+def get_favorites(user_id: str, db: Session = Depends(get_db)):
+    """
+    ログインユーザーのお気に入り曲ID一覧を返すAPI
+    """
+    user = crud.get_user_by_id(db, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    song_ids = crud.get_favorite_song_ids(db, user_id, threshold=LIKE_MILESTONE)
+    return {"song_ids": song_ids}
 
 
 # --- 投稿API ---
