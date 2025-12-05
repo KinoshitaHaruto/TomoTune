@@ -41,10 +41,13 @@ app.add_middleware(
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # 音楽ファイルの場所
 STATIC_DIR = os.path.join(BASE_DIR, "static")
+# タイプ画像の場所
+TYPE_PICTURES_DIR = os.path.join(BASE_DIR, "type_pictures")
 # Reactのビルド成果物の場所 (backendの親のfrontendのdist)
 DIST_DIR = os.path.join(os.path.dirname(BASE_DIR), "frontend", "dist")
 
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+app.mount("/type_pictures", StaticFiles(directory=TYPE_PICTURES_DIR), name="type_pictures")
 
 # --- リクエスト / レスポンスモデル ---
 class LoginRequest(BaseModel):
