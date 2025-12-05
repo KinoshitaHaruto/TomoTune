@@ -45,12 +45,17 @@ cd frontend
 npm run dev
 ```
 
-### ngrokサーバー
+### ngrokサーバー（開発用）
 ```bash
 cd frontend
 npm run build   # 環境の保存
 ngrok http 8000
 ```
+
+## 🚀 デプロイ
+
+ハッカソンなどで一時的にデプロイする場合は、[DEPLOY.md](./DEPLOY.md) を参照してください。
+Renderを使用することで、ngrokの帯域幅制限を回避できます。
 
 # ログインエラー時
 ## backend
