@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useRef, useEffect } from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { 
   Box, 
@@ -22,6 +22,14 @@ const Layout = () => {
   const toast = useToast()
   const { isOpen, onOpen, onClose } = useDisclosure()
   const { user, logout } = useUser()
+  const contentRef = useRef<HTMLDivElement>(null)
+
+  // ページ遷移時にコンテンツエリアのスクロール位置をリセット
+  useEffect(() => {
+    if (contentRef.current) {
+      contentRef.current.scrollTop = 0
+    }
+  }, [location.pathname])
 
   const handleLogout = () => {
     logout()
@@ -88,6 +96,7 @@ const Layout = () => {
 
         {/* コンテンツエリア */}
         <Box 
+          ref={contentRef}
           flex={1} 
           overflowY="auto" 
           p={6}

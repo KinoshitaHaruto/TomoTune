@@ -53,11 +53,9 @@ def scan_static_files():
     # ファイル名順に処理
     for i, filename in enumerate(sorted(os.listdir(static_dir)), start=1):
         if filename.endswith(".mp3"):
-            # ファイル名の前後の空白を削除し、NFC形式に正規化
-            # macOSのファイルシステムはNFD形式で保存することがあるため、NFCに統一
             filename_clean = unicodedata.normalize('NFC', filename.strip())
             
-            # A. CSVに情報がある場合 -> それを使う
+            # CSVに情報がある場合 -> それを使う
             if filename_clean in metadata_map:
                 data = metadata_map[filename_clean]
                 title = data["title"].strip() if data.get("title") else filename_clean.replace(".mp3", "")
@@ -79,7 +77,7 @@ def scan_static_files():
                     "time_signature": int(data.get("time_signature", 4) or 4),
                 }
             
-            # B. CSVにない場合 -> ファイル名から推測
+            # CSVにない場合 -> ファイル名から推測
             else:
                 print(f"警告: CSVに存在しないファイルが見つかりました: {filename_clean}")
                 title = filename_clean.replace(".mp3", "").replace("_", " ")

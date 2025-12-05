@@ -137,8 +137,11 @@ function Survey() {
         // 成功したらユーザー情報を最新化
         await refreshUser()
         
+        // 遷移前にスクロール位置をリセット
+        window.scrollTo(0, 0)
+        
         toast({ title: "診断完了！", status: "success" })
-        navigate('/profile')
+        navigate('/profile', { replace: true })
 
     } catch (error) {
         console.error(error)

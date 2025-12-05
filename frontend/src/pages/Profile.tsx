@@ -1,8 +1,8 @@
 "use client";
 
 import React from 'react'
-import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useEffect, useState, useLayoutEffect } from 'react'
+import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import {
   Box,
   Heading,
@@ -46,11 +46,25 @@ function Profile() {
   const [newTag, setNewTag] = useState('')
   const shareModal = useDisclosure()
   const navigate = useNavigate()
+  const location = useLocation()
   const toast = useToast()
   const { user, logout, refreshUser } = useUser()
   const { userId: paramUserId } = useParams()
   const [profileUser, setProfileUser] = useState<User | null>(null)
   const [isLoadingProfile, setIsLoadingProfile] = useState(false)
+
+  // ページ遷移時に必ず一番上にスクロール
+  useLayoutEffect(() => {
+    window.scrollTo(0, 0)
+  }, [location.pathname])
+
+  // レンダリング後にもスクロール位置をリセット
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      window.scrollTo(0, 0)
+    }, 0)
+    return () => clearTimeout(timer)
+  }, [location.pathname])
 
   // プロフィールコードに対応する絵文字を返す
   const getProfileEmoji = (code: string): string => {
