@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import {
   Box,
   Heading,
@@ -12,32 +12,29 @@ import {
   Divider,
 } from '@chakra-ui/react'
 
-import { API_BASE } from '../config'
 import LikeButton from '../components/LikeButton'
 import PostCard from '../components/PostCard'
-import type { Post } from '../types'
+import { API_BASE } from '../config'
+import { BiComment } from 'react-icons/bi'
 
-// 曲の型
-type Song = {
-  id: number
-  title: string
-  artist: string
-  url: string
-}
-
+// 曲の型（あなた側のバージョンに合わせて any にしてます）
 function Home() {
   const navigate = useNavigate()
 
   const [userId, setUserId] = useState<string | null>(null)
-
-  // 曲関連
-  const [songs, setSongs] = useState<Song[]>([])
+  const [songs, setSongs] = useState<any[]>([])
+  const [posts, setPosts] = useState<any[]>([])
   const [openSongID, setOpenSongID] = useState<number | null>(null)
 
-  // 投稿関連
-  const [posts, setPosts] = useState<Post[]>([])
+  // Like ボタン処理（仮）
+  const handleLike = () => {}
 
-  // ログインチェック
+  // コメント Drawer 開く
+  const handleComment = (id: number) => {
+    setOpenSongID(id)
+  }
+
+  // ログイン確認
   useEffect(() => {
     const storedId = localStorage.getItem('tomo_user_id')
     if (!storedId) {
@@ -45,97 +42,71 @@ function Home() {
     } else {
       setUserId(storedId)
     }
-  }, [navigate])
+  }, [])
 
-  // 曲取得
+  // 曲データ取得
   useEffect(() => {
     fetch(`${API_BASE}/songs`)
       .then((res) => res.json())
-      .then((data: Song[]) => setSongs(data))
-      .catch((err) => console.error('曲の取得に失敗しました', err))
+      .then((data) => setSongs(data))
   }, [])
 
-  // 投稿取得
+  // 投稿データ取得
   useEffect(() => {
     fetch(`${API_BASE}/posts`)
       .then((res) => res.json())
-      .then((data: Post[]) => setPosts(data))
-      .catch((err) => console.error('投稿の取得に失敗しました', err))
+      .then((data) => setPosts(data))
   }, [])
-
-  const handleComment = (songId: number) => {
-    setOpenSongID(songId)
-  }
 
   return (
     <VStack spacing={8} align="stretch">
-      {/* 🏠 ヘッダ */}
-      <Heading size="lg" color="pink.400">
-        TomoTune へようこそ
-      </Heading>
-      <Text color="gray.600" fontSize="sm">
-        曲を聴いて気に入った曲のハートボタンを押そう！今日は何が見つかるかな？
-      </Text>
 
-      {/* 🎵 曲セクション */}
+      {/* ------------------- 曲一覧 ------------------- */}
+      <Heading size="md" color="gray.700">曲一覧</Heading>
+
       <VStack spacing={4} align="stretch">
-        <Heading size="md" color="gray.700">
-          人気の曲
-        </Heading>
+        {songs.map((song) => (
+          <Card key={song.id} w="100%" shadow="sm">
+            <CardBody p={4}>
+              <Stack spacing={3}>
+                <Box>
+                  <Heading size="md">{song.title}</Heading>
+                  <Text fontSize="sm" color="gray.500">{song.artist}</Text>
+                </Box>
 
-        {songs.length === 0 ? (
-          <Text color="gray.500" fontSize="sm">曲を読み込んでいます…</Text>
-        ) : (
-          songs.map((song) => (
-            <Card
-              key={song.id}
-              w="100%"
-              shadow="sm"
-              borderRadius="lg"
-              border="1px solid"
-              borderColor="gray.200"
-            >
-              <CardBody p={4}>
-                <Stack spacing={3}>
-                  <Box>
-                    <Heading size="md">{song.title}</Heading>
-                    <Text color="gray.500" fontSize="sm">
-                      {song.artist}
-                    </Text>
+                <Divider />
+
+                <Box display="flex" alignItems="center">
+                  <Box flex={1}>
+                    {song.url ? (
+                      <audio controls src={song.url} style={{ width: '100%' }} />
+                    ) : (
+                      <Text color="red.400">※ 音声ファイルなし</Text>
+                    )}
                   </Box>
 
-                  <Divider />
+                  {/* Like */}
+                  <LikeButton songId={song.id} onClick={handleLike} ml="auto" />
 
-                  {/* audio, Like, コメント */}
-                  <Box display="flex" alignItems="center">
-                    <Box flex={1}>
-                      <audio
-                        controls
-                        src={song.url}
-                        style={{ width: '100%' }}
-                        controlsList="nodownload noplaybackrate"
-                      />
-                    </Box>
-
-                    <LikeButton songId={song.id} ml="auto" />
-
-                    <Button
-                      bg="#ff78b5ff"
-                      color="white"
-                      ml={3}
-                      onClick={() => handleComment(song.id)}
-                    >
-                      コメント
-                    </Button>
-                  </Box>
-                </Stack>
-              </CardBody>
-            </Card>
-          ))
-        )}
+                  {/* コメントアイコンボタン */}
+                  <Button
+                    bg="#fff6f6cf"
+                    color="#ff78b5ff"
+                    ml={3}
+                    onClick={() => handleComment(song.id)}
+                    p={2}
+                    borderRadius="full"
+                  >
+                    <BiComment size={20} />
+                  </Button>
+                </Box>
+              </Stack>
+            </CardBody>
+          </Card>
+        ))}
       </VStack>
 
-      {/* 💬 コメント Drawer */}
+      {/* コメント Drawer */}
       {openSongID && (
         <Box
           position="fixed"
@@ -152,30 +123,25 @@ function Home() {
           zIndex={2000}
           p={4}
         >
-          <Text fontWeight="bold" mb={3}>
-            みんなのコメント
-          </Text>
+          <Text fontWeight="bold" mb={3}>みんなの投稿</Text>
 
-          <VStack align="start" spacing={3}>
+          <VStack align="start">
             <Text>・めっちゃいい曲！</Text>
             <Text>・歌詞がしみる…</Text>
             <Text>・声好きすぎる</Text>
           </VStack>
 
-          <Button mt={4} width="100%" onClick={() => setOpenSongID(null)}>
+          <Button mt={4} w="100%" onClick={() => setOpenSongID(null)}>
             閉じる
           </Button>
         </Box>
       )}
 
-      {/* ✍ 投稿一覧 */}
-      <VStack spacing={4} align="stretch" mt={6}>
-        <Heading size="md" color="gray.700">
-          みんなの投稿
-        </Heading>
-
+      {/* ------------------- 投稿一覧 ------------------- */}
+      <Heading size="md" color="gray.700">みんなの投稿</Heading>
+      <VStack spacing={4} align="stretch">
         {posts.length === 0 ? (
-          <Text color="gray.500" fontSize="sm">投稿を読み込んでいます…</Text>
+          <Text color="gray.500">まだ投稿はありません。</Text>
         ) : (
           posts.map((post) => (
             <PostCard
@@ -186,6 +152,7 @@ function Home() {
           ))
         )}
       </VStack>
+
     </VStack>
   )
 }
