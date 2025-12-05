@@ -12,6 +12,30 @@ import {
   Divider,
 } from '@chakra-ui/react'
 
+<<<<<<< HEAD
+import { API_BASE } from '../config'
+import LikeButton from '../components/LikeButton'
+import PostCard from '../components/PostCard'
+import type { Post } from '../types'
+
+// 曲データの設計図
+type Song = {
+  id: number;
+  title: string;
+  artist: string;
+  url: string;
+};
+
+function Home() {
+  const navigate = useNavigate()
+  const [userId, setUserId] = useState<string | null>(null)
+
+  // 曲系
+  const [songs, setSongs] = useState<Song[]>([])
+  const [openSongID, setOpenSongID] = useState<number | null>(null)
+
+  // 投稿系
+=======
 import LikeButton from '../components/LikeButton'
 import { API_BASE } from '../config'
 import PostCard from '../components/PostCard'
@@ -35,6 +59,7 @@ function Home() {
   const [openSongID, setOpenSongID] = useState<number | null>(null)
 
   // 投稿の状態
+>>>>>>> 6d80ec7c10070a3abb55dfb8ab32a11bd051ef34
   const [posts, setPosts] = useState<Post[]>([])
 
   // ログインチェック
@@ -59,6 +84,8 @@ function Home() {
   useEffect(() => {
     fetch(`${API_BASE}/posts`)
       .then((res) => res.json())
+<<<<<<< HEAD
+=======
       .then((data: Post[]) => setPosts(data))
       .catch((err) => console.error('投稿の取得に失敗しました', err))
   }, [])
@@ -202,3 +229,4 @@ function Home() {
 }
 
 export default Home
+>>>>>>> 6d80ec7c10070a3abb55dfb8ab32a11bd051ef34
