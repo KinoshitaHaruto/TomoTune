@@ -1,38 +1,27 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  Box,
   Heading,
   Text,
-  Button,
   VStack,
-  Stack,
-  Card,
-  CardBody,
-  Divider,
+  Box,
+  Button,
+  HStack,
+  Tag,
+  Textarea,
 } from '@chakra-ui/react'
 
-import LikeButton from '../components/LikeButton'
 import PostCard from '../components/PostCard'
 import { API_BASE } from '../config'
-import { BiComment } from 'react-icons/bi'
-
-// 曲の型（あなた側のバージョンに合わせて any にしてます）
+import type { Post, Comment } from '../types'
 function Home() {
   const navigate = useNavigate()
 
   const [userId, setUserId] = useState<string | null>(null)
-  const [songs, setSongs] = useState<any[]>([])
-  const [posts, setPosts] = useState<any[]>([])
-  const [openSongID, setOpenSongID] = useState<number | null>(null)
-
-  // Like ボタン処理（仮）
-  const handleLike = () => {}
-
-  // コメント Drawer 開く
-  const handleComment = (id: number) => {
-    setOpenSongID(id)
-  }
+  const [posts, setPosts] = useState<Post[]>([])
+  const [selectedPost, setSelectedPost] = useState<Post | null>(null)
+  const [comments, setComments] = useState<Comment[]>([])
+  const [commentText, setCommentText] = useState('')
 
   // ログイン確認
   useEffect(() => {
@@ -44,13 +33,6 @@ function Home() {
     }
   }, [])
 
-  // 曲データ取得
-  useEffect(() => {
-    fetch(`${API_BASE}/songs`)
-      .then((res) => res.json())
-      .then((data) => setSongs(data))
-  }, [])
-
   // 投稿データ取得
   useEffect(() => {
     fetch(`${API_BASE}/posts`)
@@ -58,56 +40,61 @@ function Home() {
       .then((data) => setPosts(data))
   }, [])
 
+  // コメント表示開始
+  const handleOpenComments = (post: Post) => {
+    setSelectedPost(post)
+    setComments(post.comments ?? [])
+    setCommentText('')
+  }
+
+  const handleAddComment = async () => {
+    if (!selectedPost) return
+    if (!userId) {
+      alert('コメントするにはログインしてください')
+      return
+    }
+    if (!commentText.trim()) return
+
+    const res = await fetch(`${API_BASE}/posts/${selectedPost.id}/comments`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: userId, content: commentText.trim() }),
+    })
+
+    if (!res.ok) {
+      alert('コメントの送信に失敗しました')
+      return
+    }
+
+    const newComment = (await res.json()) as Comment
+    setComments((prev) => [...prev, newComment])
+    setCommentText('')
+  }
+
   return (
-    <VStack spacing={8} align="stretch">
+    <Box position="relative" pb={selectedPost ? 24 : 0}>
+      <VStack spacing={8} align="stretch">
 
-      {/* ------------------- 曲一覧 ------------------- */}
-      <Heading size="md" color="gray.700">曲一覧</Heading>
+        {/* ------------------- 投稿一覧 ------------------- */}
+        <Heading size="md" color="gray.700">みんなの投稿</Heading>
+        <VStack spacing={4} align="stretch">
+          {posts.length === 0 ? (
+            <Text color="gray.500">まだ投稿はありません。</Text>
+          ) : (
+            posts.map((post) => (
+              <PostCard
+                key={post.id}
+                post={post}
+                currentUserId={userId ?? undefined}
+                onOpenComments={handleOpenComments}
+              />
+            ))
+          )}
+        </VStack>
 
-      <VStack spacing={4} align="stretch">
-        {songs.map((song) => (
-          <Card key={song.id} w="100%" shadow="sm">
-            <CardBody p={4}>
-              <Stack spacing={3}>
-                <Box>
-                  <Heading size="md">{song.title}</Heading>
-                  <Text fontSize="sm" color="gray.500">{song.artist}</Text>
-                </Box>
-
-                <Divider />
-
-                <Box display="flex" alignItems="center">
-                  <Box flex={1}>
-                    {song.url ? (
-                      <audio controls src={song.url} style={{ width: '100%' }} />
-                    ) : (
-                      <Text color="red.400">※ 音声ファイルなし</Text>
-                    )}
-                  </Box>
-
-                  {/* Like */}
-                  <LikeButton songId={song.id} onClick={handleLike} ml="auto" />
-
-                  {/* コメントアイコンボタン */}
-                  <Button
-                    bg="#fff6f6cf"
-                    color="#ff78b5ff"
-                    ml={3}
-                    onClick={() => handleComment(song.id)}
-                    p={2}
-                    borderRadius="full"
-                  >
-                    <BiComment size={20} />
-                  </Button>
-                </Box>
-              </Stack>
-            </CardBody>
-          </Card>
-        ))}
       </VStack>
 
-      {/* コメント Drawer */}
-      {openSongID && (
+      {selectedPost && (
         <Box
           position="fixed"
           bottom={0}
@@ -123,37 +110,75 @@ function Home() {
           zIndex={2000}
           p={4}
         >
-          <Text fontWeight="bold" mb={3}>みんなの投稿</Text>
+          <HStack justify="space-between" mb={3}>
+            <Box>
+              <Text fontSize="sm" color="gray.500">投稿者</Text>
+              <Text fontWeight="bold">{selectedPost.user?.name ?? 'Unknown'}</Text>
+            </Box>
+            <Text fontSize="xs" color="gray.500">
+              {new Date(selectedPost.created_at).toLocaleString()}
+            </Text>
+          </HStack>
 
-          <VStack align="start">
-            <Text>・めっちゃいい曲！</Text>
-            <Text>・歌詞がしみる…</Text>
-            <Text>・声好きすぎる</Text>
+          <Box mb={3}>
+            <Text fontSize="xs" color="gray.500">曲</Text>
+            <Text fontWeight="bold">{selectedPost.song.title}</Text>
+            <Text fontSize="sm" color="gray.500">{selectedPost.song.artist}</Text>
+          </Box>
+
+          <VStack align="stretch" spacing={3}>
+            {comments.length === 0 ? (
+              <Text fontSize="sm" color="gray.500">まだコメントはありません。</Text>
+            ) : (
+              <VStack align="stretch" spacing={2}>
+                {comments.map((c) => (
+                  <Box key={c.id} p={2} bg="gray.50" borderRadius="md" border="1px solid" borderColor="gray.100">
+                    <HStack justify="space-between" mb={1}>
+                      <Box>
+                        <Text fontSize="sm" fontWeight="semibold">
+                          {c.user?.name ?? 'Unknown'}
+                        </Text>
+                        {c.user?.music_type?.code && (
+                          <Tag size="xs" colorScheme="purple" variant="subtle" mt={1}>
+                            {c.user.music_type.code}
+                          </Tag>
+                        )}
+                      </Box>
+                      <Text fontSize="xs" color="gray.500">
+                        {new Date(c.created_at).toLocaleString()}
+                      </Text>
+                    </HStack>
+                    <Text fontSize="sm" color="gray.800">
+                      {c.content}
+                    </Text>
+                  </Box>
+                ))}
+              </VStack>
+            )}
+
+            <Textarea
+              placeholder="投稿へのコメントを書く"
+              value={commentText}
+              onChange={(e) => setCommentText(e.target.value)}
+              size="sm"
+              bg="gray.50"
+            />
+            <Button colorScheme="pink" size="sm" onClick={handleAddComment} isDisabled={!userId}>
+              コメントを送信
+            </Button>
+            {!userId && (
+              <Text fontSize="xs" color="gray.500">
+                コメントするにはログインしてください。
+              </Text>
+            )}
+
+            <Button mt={2} w="100%" onClick={() => setSelectedPost(null)}>
+              閉じる
+            </Button>
           </VStack>
-
-          <Button mt={4} w="100%" onClick={() => setOpenSongID(null)}>
-            閉じる
-          </Button>
         </Box>
       )}
-
-      {/* ------------------- 投稿一覧 ------------------- */}
-      <Heading size="md" color="gray.700">みんなの投稿</Heading>
-      <VStack spacing={4} align="stretch">
-        {posts.length === 0 ? (
-          <Text color="gray.500">まだ投稿はありません。</Text>
-        ) : (
-          posts.map((post) => (
-            <PostCard
-              key={post.id}
-              post={post}
-              currentUserId={userId ?? undefined}
-            />
-          ))
-        )}
-      </VStack>
-
-    </VStack>
+    </Box>
   )
 }
 

@@ -32,6 +32,17 @@ export interface Song {
   parameters?: string; 
 }
 
+export interface Comment {
+  id: number;
+  content: string;
+  created_at: string;
+  user: {
+    id: string;
+    name: string;
+    music_type?: MusicType | null;
+  } | null;
+}
+
 export interface Post {
   id: number;
   comment: string;
@@ -39,6 +50,8 @@ export interface Post {
   user: {
     id: string;
     name: string;
+    music_type?: MusicType | null;
   } | null;
   song: Song;
+  comments?: Comment[];
 }

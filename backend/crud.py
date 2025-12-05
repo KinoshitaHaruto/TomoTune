@@ -1,8 +1,8 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func # 集計用(COUNTとか)
 from datetime import datetime
 import uuid
-from models import User, Song, LikeLog, Post
+from models import User, Song, LikeLog, Post, Comment
 
 # --- 曲の操作 ---
 
@@ -100,12 +100,57 @@ def create_post(db: Session, user_id: str, song_id: int, comment: str) -> Post:
     return new_post
 
 
-def get_recent_posts(db: Session, limit: int = 50):
-    """最新の投稿を新しい順に取得する"""
+def get_post_by_id(db: Session, post_id: int) -> Post:
+    """投稿をIDで取得する"""
     return (
         db.query(Post)
+        .options(
+            joinedload(Post.user).joinedload(User.music_type),
+            joinedload(Post.song),
+            joinedload(Post.comments).joinedload(Comment.user).joinedload(User.music_type),
+        )
+        .filter(Post.id == post_id)
+        .first()
+    )
+
+
+def get_recent_posts(db: Session, limit: int = 50):
+    """最新の投稿を新しい順に取得する（ユーザー/曲/コメントも取得）"""
+    return (
+        db.query(Post)
+        .options(
+            # 関連オブジェクトを一度に取得してN+1を避ける
+            joinedload(Post.user).joinedload(User.music_type),
+            joinedload(Post.song),
+            joinedload(Post.comments).joinedload(Comment.user).joinedload(User.music_type),
+        )
         .order_by(Post.created_at.desc())
         .limit(limit)
+        .all()
+    )
+
+
+# --- コメントの操作 ---
+
+def create_comment(db: Session, post_id: int, user_id: str, content: str) -> Comment:
+    """コメントを追加する"""
+    new_comment = Comment(
+        post_id=post_id,
+        user_id=user_id,
+        content=content,
+    )
+    db.add(new_comment)
+    db.commit()
+    db.refresh(new_comment)
+    return new_comment
+
+
+def get_comments_by_post(db: Session, post_id: int):
+    """特定の投稿に紐づくコメント一覧を取得（新しい順）"""
+    return (
+        db.query(Comment)
+        .filter(Comment.post_id == post_id)
+        .order_by(Comment.created_at.asc())
         .all()
     )
 

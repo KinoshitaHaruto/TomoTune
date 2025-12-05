@@ -42,7 +42,7 @@ const Layout = () => {
   return (
     // 全体の背景
     <Box bg="gray.100" minH="100vh" py={10} px={4}>
-      
+    
       {/* スマホ枠 (固定) */}
       <Container 
         maxW="480px"       
