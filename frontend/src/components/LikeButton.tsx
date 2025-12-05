@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Box, IconButton, useToast } from '@chakra-ui/react'
 import { API_BASE } from '../config'         // APIのURL設定
@@ -35,7 +35,7 @@ const FlyingHeart = () => {
 // --- LikeButton本体 ---
 
 type LikeButtonProps = {
-    songId: number;
+    songId: number | string;
     // 親側で「見た目のカウント」やマイルストーン検知をしたい場合に使う
     onLikeSuccess?: (newTotal: number, isMilestone: boolean) => void; 
     [key: string]: any; 
@@ -45,6 +45,7 @@ const LikeButton = ({ songId, onLikeSuccess, ...props }: LikeButtonProps) => {
     const [hearts, setHearts] = useState<{ id: number }[]>([]);
     const { user, refreshUser } = useUser(); // Contextからユーザー情報と更新関数を取得
     const toast = useToast();
+    const lastNotifiedTypeRef = useRef<string | null>(null);
 
     const handleClick = async () => {
         // ユーザーIDを確定（Context -> localStorage の順で取得）
@@ -82,15 +83,15 @@ const LikeButton = ({ songId, onLikeSuccess, ...props }: LikeButtonProps) => {
 
             // 診断結果の変化検知ロジック
             const oldType = user?.music_type?.code; 
-            // APIから返ってきた新しいタイプコード
             const newType = data.user_music_type;
 
             // ユーザー情報の最新化 (Context更新)
             await refreshUser();
 
             // 通知分岐
-            if (oldType && newType && oldType !== newType) {
-                // タイプが変わった場合
+            if (oldType && newType && oldType !== newType && lastNotifiedTypeRef.current !== newType) {
+                // タイプが変わった場合（かつ前回と同じタイプへの変化トーストをまだ出していない場合）
+                lastNotifiedTypeRef.current = newType;
                 toast({
                     title: "Music Type Updated!",
                     description: `あなたのMusic Typeが変化しました！プロフィールをチェック！`,
@@ -100,7 +101,7 @@ const LikeButton = ({ songId, onLikeSuccess, ...props }: LikeButtonProps) => {
                     position: "top",
                 });
             } else if (data.is_milestone) {
-                // 5回達成時
+                // ちょうど5回目達成時のみ
                 toast({
                     title: "5回いいね！達成🎉",
                     description: "お気に入りに追加されました。",
@@ -110,9 +111,9 @@ const LikeButton = ({ songId, onLikeSuccess, ...props }: LikeButtonProps) => {
                 });
             }
 
-            // 親コンポーネントに通知
+            // 親コンポーネントに通知（現在のお気に入り状態を渡す）
             if (onLikeSuccess) {
-                onLikeSuccess(data.total_likes, data.is_milestone);
+                onLikeSuccess(data.total_likes, data.is_favorite);
             }
 
         } catch (error) {
