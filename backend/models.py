@@ -34,6 +34,7 @@ class User(Base):
     # リレーション: ユーザーはたくさんの「いいねログ」と「投稿」を持つ
     like_logs = relationship("LikeLog", back_populates="user")
     posts = relationship("Post", back_populates="user")
+    comments = relationship("Comment", back_populates="user")
 
 # Music Typeテーブル
 class MusicType(Base):
@@ -102,3 +103,19 @@ class Post(Base):
     # リレーション
     user = relationship("User", back_populates="posts")
     song = relationship("Song", back_populates="posts")
+    comments = relationship("Comment", back_populates="post", cascade="all,delete")
+
+
+# 投稿へのコメント
+class Comment(Base):
+    __tablename__ = "comments"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    post_id = Column(Integer, ForeignKey("posts.id"), nullable=False)
+    user_id = Column(String, ForeignKey("users.id"), nullable=False)
+    content = Column(String, nullable=False)
+    created_at = Column(DateTime, default=datetime.now)
+
+    # リレーション
+    post = relationship("Post", back_populates="comments")
+    user = relationship("User", back_populates="comments")

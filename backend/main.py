@@ -60,6 +60,10 @@ class PostCreateRequest(BaseModel):
     song_id: int
     comment: str
 
+class CommentCreateRequest(BaseModel):
+    user_id: str
+    content: str
+
 
 # --- API ---
 
@@ -258,9 +262,40 @@ def list_posts(limit: int = 50, db: Session = Depends(get_db)):
 
     results = []
     for p in posts:
-        # 関連オブジェクトを明示的に参照（lazy load）
         user = p.user
         song = p.song
+
+        # ユーザーのMusic Type情報
+        music_type_data = None
+        if user and user.music_type:
+            music_type_data = {
+                "code": user.music_type.code,
+                "name": user.music_type.name,
+                "description": user.music_type.description,
+            }
+
+        # コメント一覧
+        comments_payload = []
+        for c in p.comments:
+            comment_user = c.user
+            comment_music_type = None
+            if comment_user and comment_user.music_type:
+                comment_music_type = {
+                    "code": comment_user.music_type.code,
+                    "name": comment_user.music_type.name,
+                    "description": comment_user.music_type.description,
+                }
+            comments_payload.append({
+                "id": c.id,
+                "content": c.content,
+                "created_at": c.created_at.isoformat(),
+                "user": {
+                    "id": comment_user.id,
+                    "name": comment_user.name,
+                    "music_type": comment_music_type,
+                } if comment_user else None,
+            })
+
         results.append({
             "id": p.id,
             "comment": p.comment,
@@ -268,6 +303,7 @@ def list_posts(limit: int = 50, db: Session = Depends(get_db)):
             "user": {
                 "id": user.id,
                 "name": user.name,
+                "music_type": music_type_data,
             } if user else None,
             "song": {
                 "id": song.id,
@@ -275,9 +311,73 @@ def list_posts(limit: int = 50, db: Session = Depends(get_db)):
                 "artist": song.artist,
                 "url": song.url,
             } if song else None,
+            "comments": comments_payload,
         })
 
     return results
+
+
+@app.get("/posts/{post_id}/comments")
+def list_comments(post_id: int, db: Session = Depends(get_db)):
+    post = crud.get_post_by_id(db, post_id)
+    if not post:
+        raise HTTPException(status_code=404, detail="Post not found")
+
+    comments = crud.get_comments_by_post(db, post_id)
+
+    payload = []
+    for c in comments:
+        comment_user = c.user
+        comment_music_type = None
+        if comment_user and comment_user.music_type:
+            comment_music_type = {
+                "code": comment_user.music_type.code,
+                "name": comment_user.music_type.name,
+                "description": comment_user.music_type.description,
+            }
+        payload.append({
+            "id": c.id,
+            "content": c.content,
+            "created_at": c.created_at.isoformat(),
+            "user": {
+                "id": comment_user.id,
+                "name": comment_user.name,
+                "music_type": comment_music_type,
+            } if comment_user else None,
+        })
+    return payload
+
+
+@app.post("/posts/{post_id}/comments", status_code=status.HTTP_201_CREATED)
+def create_comment(post_id: int, req: CommentCreateRequest, db: Session = Depends(get_db)):
+    post = crud.get_post_by_id(db, post_id)
+    if not post:
+        raise HTTPException(status_code=404, detail="Post not found")
+
+    user = crud.get_user_by_id(db, req.user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    comment = crud.create_comment(db, post_id, req.user_id, req.content)
+
+    music_type_data = None
+    if user.music_type:
+        music_type_data = {
+            "code": user.music_type.code,
+            "name": user.music_type.name,
+            "description": user.music_type.description,
+        }
+
+    return {
+        "id": comment.id,
+        "content": comment.content,
+        "created_at": comment.created_at.isoformat(),
+        "user": {
+            "id": user.id,
+            "name": user.name,
+            "music_type": music_type_data,
+        }
+    }
 
 # ルートURL ("/") にアクセスが来たら、distフォルダの中身(index.html)を返す
 if os.path.exists(DIST_DIR):

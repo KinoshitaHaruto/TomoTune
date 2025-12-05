@@ -1,38 +1,19 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import {
-  Box,
-  Heading,
-  Text,
-  Button,
-  VStack,
-  Stack,
-  Card,
-  CardBody,
-  Divider,
-} from '@chakra-ui/react'
+import { Box, Heading, Text, VStack, Stack, Card, CardBody, Divider } from '@chakra-ui/react'
 
 import LikeButton from '../components/LikeButton'
 import PostCard from '../components/PostCard'
 import { API_BASE } from '../config'
-import { BiComment } from 'react-icons/bi'
-
-// 曲の型（あなた側のバージョンに合わせて any にしてます）
 function Home() {
   const navigate = useNavigate()
 
   const [userId, setUserId] = useState<string | null>(null)
   const [songs, setSongs] = useState<any[]>([])
   const [posts, setPosts] = useState<any[]>([])
-  const [openSongID, setOpenSongID] = useState<number | null>(null)
 
   // Like ボタン処理（仮）
   const handleLike = () => {}
-
-  // コメント Drawer 開く
-  const handleComment = (id: number) => {
-    setOpenSongID(id)
-  }
 
   // ログイン確認
   useEffect(() => {
@@ -88,54 +69,12 @@ function Home() {
                   {/* Like */}
                   <LikeButton songId={song.id} onClick={handleLike} ml="auto" />
 
-                  {/* コメントアイコンボタン */}
-                  <Button
-                    bg="#fff6f6cf"
-                    color="#ff78b5ff"
-                    ml={3}
-                    onClick={() => handleComment(song.id)}
-                    p={2}
-                    borderRadius="full"
-                  >
-                    <BiComment size={20} />
-                  </Button>
                 </Box>
               </Stack>
             </CardBody>
           </Card>
         ))}
       </VStack>
-
-      {/* コメント Drawer */}
-      {openSongID && (
-        <Box
-          position="fixed"
-          bottom={0}
-          left="50%"
-          transform="translateX(-50%)"
-          width="100%"
-          maxW="480px"
-          bg="white"
-          borderTopRadius="24px"
-          boxShadow="0 -4px 12px rgba(0,0,0,0.15)"
-          maxH="55vh"
-          overflowY="auto"
-          zIndex={2000}
-          p={4}
-        >
-          <Text fontWeight="bold" mb={3}>みんなの投稿</Text>
-
-          <VStack align="start">
-            <Text>・めっちゃいい曲！</Text>
-            <Text>・歌詞がしみる…</Text>
-            <Text>・声好きすぎる</Text>
-          </VStack>
-
-          <Button mt={4} w="100%" onClick={() => setOpenSongID(null)}>
-            閉じる
-          </Button>
-        </Box>
-      )}
 
       {/* ------------------- 投稿一覧 ------------------- */}
       <Heading size="md" color="gray.700">みんなの投稿</Heading>
