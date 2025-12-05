@@ -51,3 +51,7 @@ cd frontend
 npm run build   # 環境の保存
 ngrok http 8000
 ```
+
+# ログインエラー時
+## backend
+python .\init_db.py
