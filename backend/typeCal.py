@@ -14,7 +14,7 @@ def calculate_new_scores(current_user, song_params_json: str):
 
     # 学習率 (0.1 = 過去90% : 新曲10% の割合で変化)
     # ハッカソン用に学習率は高めに設定
-    alpha = 0.05
+    alpha = 0.06
 
     # --- 1. V vs C (Valence) ---
     # High Valence = V (1.0), Low = C (0.0)
