@@ -3,6 +3,7 @@ import csv
 import uuid
 import json
 import os
+import unicodedata
 
 # サーバーのURL (自分のPCの住所)
 # BASE_URL = "http://127.0.0.1:8000"
@@ -17,12 +18,15 @@ def load_song_metadata():
     csv_path = os.path.join(base_dir, "songs.csv")
     
     if not os.path.exists(csv_path):
+        print(f"警告: {csv_path} が見つかりません。")
         return {}
 
     with open(csv_path, mode='r', encoding='utf-8') as f:
         reader = csv.DictReader(f)
         for row in reader:
-            metadata[row["filename"]] = row
+            # ファイル名の前後の空白を削除し、NFC形式に正規化
+            filename = unicodedata.normalize('NFC', row["filename"].strip())
+            metadata[filename] = row
     return metadata
 
 # staticフォルダ内の音楽ファイルをスキャンして曲リストを作成
@@ -34,39 +38,51 @@ def scan_static_files():
     
     # CSVデータを読み込む
     metadata_map = load_song_metadata()
+    
+    if not metadata_map:
+        print("警告: CSVから曲情報を読み込めませんでした。")
 
     if not os.path.exists(static_dir):
+        print(f"警告: {static_dir} が見つかりません。")
         return []
+
+    # デバッグ用: CSVに含まれるファイル名を表示
+    csv_filenames = set(metadata_map.keys())
+    print(f"CSVに登録されている曲数: {len(csv_filenames)}")
 
     # ファイル名順に処理
     for i, filename in enumerate(sorted(os.listdir(static_dir)), start=1):
         if filename.endswith(".mp3"):
+            # ファイル名の前後の空白を削除し、NFC形式に正規化
+            # macOSのファイルシステムはNFD形式で保存することがあるため、NFCに統一
+            filename_clean = unicodedata.normalize('NFC', filename.strip())
             
             # A. CSVに情報がある場合 -> それを使う
-            if filename in metadata_map:
-                data = metadata_map[filename]
-                title = data["title"]
-                artist = data["artist"]
+            if filename_clean in metadata_map:
+                data = metadata_map[filename_clean]
+                title = data["title"].strip() if data.get("title") else filename_clean.replace(".mp3", "")
+                artist = data["artist"].strip() if data.get("artist") else "Unknown Artist"
                 
-                # パラメータを辞書としてまとめる
+                # パラメータを辞書としてまとめる（文字列を数値に変換）
                 params = {
-                    "acousticness": data.get("acousticness", 0),
-                    "danceability": data.get("danceability", 0),
-                    "energy": data.get("energy", 0),
-                    "instrumentalness": data.get("instrumentalness", 0),
-                    "liveness": data.get("liveness", 0),
-                    "loudness": data.get("loudness", 0),
-                    "speechiness": data.get("speechiness", 0),
-                    "valence": data.get("valence", 0),
-                    "tempo": data.get("tempo", 0),
-                    "key": data.get("key", 0),
-                    "mode": data.get("mode", 0),
-                    "time_signature": data.get("time_signature", 0),
+                    "acousticness": float(data.get("acousticness", 0) or 0),
+                    "danceability": float(data.get("danceability", 0) or 0),
+                    "energy": float(data.get("energy", 0) or 0),
+                    "instrumentalness": float(data.get("instrumentalness", 0) or 0),
+                    "liveness": float(data.get("liveness", 0) or 0),
+                    "loudness": float(data.get("loudness", 0) or 0),
+                    "speechiness": float(data.get("speechiness", 0) or 0),
+                    "valence": float(data.get("valence", 0) or 0),
+                    "tempo": float(data.get("tempo", 0) or 0),
+                    "key": int(data.get("key", 0) or 0),
+                    "mode": int(data.get("mode", 0) or 0),
+                    "time_signature": int(data.get("time_signature", 4) or 4),
                 }
             
             # B. CSVにない場合 -> ファイル名から推測
             else:
-                title = filename.replace(".mp3", "").replace("_", " ")
+                print(f"警告: CSVに存在しないファイルが見つかりました: {filename_clean}")
+                title = filename_clean.replace(".mp3", "").replace("_", " ")
                 artist = "Unknown Artist"
                 params = {} 
 
@@ -74,7 +90,7 @@ def scan_static_files():
                 "id": i,
                 "title": title,
                 "artist": artist,
-                "url": f"/static/{filename}",
+                "url": f"/static/{filename_clean}",
                 # 辞書をJSON文字列に変換して保存
                 "parameters": json.dumps(params)
             }

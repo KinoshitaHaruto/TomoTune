@@ -11,11 +11,13 @@ import {
   CardBody,
   Divider,
 } from '@chakra-ui/react'
+
 import LikeButton from '../components/LikeButton'
 import PostCard from '../components/PostCard'
 import { API_BASE } from '../config'
 import { BiComment } from 'react-icons/bi'
 
+// 曲の型（あなた側のバージョンに合わせて any にしてます）
 function Home() {
   const navigate = useNavigate()
 
@@ -49,7 +51,7 @@ function Home() {
       .then((data) => setSongs(data))
   }, [])
 
-  // 投稿取得
+  // 投稿データ取得
   useEffect(() => {
     fetch(`${API_BASE}/posts`)
       .then((res) => res.json())
@@ -62,7 +64,7 @@ function Home() {
       {/* ------------------- 曲一覧 ------------------- */}
       <Heading size="md" color="gray.700">曲一覧</Heading>
 
-      <VStack spacing={4}>
+      <VStack spacing={4} align="stretch">
         {songs.map((song) => (
           <Card key={song.id} w="100%" shadow="sm">
             <CardBody p={4}>
@@ -83,8 +85,10 @@ function Home() {
                     )}
                   </Box>
 
+                  {/* Like */}
                   <LikeButton songId={song.id} onClick={handleLike} ml="auto" />
 
+                  {/* コメントアイコンボタン */}
                   <Button
                     bg="#fff6f6cf"
                     color="#ff78b5ff"
@@ -127,7 +131,7 @@ function Home() {
             <Text>・声好きすぎる</Text>
           </VStack>
 
-          <Button mt={4} onClick={() => setOpenSongID(null)} w="100%">
+          <Button mt={4} w="100%" onClick={() => setOpenSongID(null)}>
             閉じる
           </Button>
         </Box>
@@ -140,7 +144,11 @@ function Home() {
           <Text color="gray.500">まだ投稿はありません。</Text>
         ) : (
           posts.map((post) => (
-            <PostCard key={post.id} post={post} currentUserId={userId ?? undefined} />
+            <PostCard
+              key={post.id}
+              post={post}
+              currentUserId={userId ?? undefined}
+            />
           ))
         )}
       </VStack>
