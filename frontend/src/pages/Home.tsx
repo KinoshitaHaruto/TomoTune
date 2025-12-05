@@ -14,6 +14,7 @@ import {
 import LikeButton from '../components/LikeButton'
 import PostCard from '../components/PostCard'
 import { API_BASE } from '../config'
+import { BiComment } from 'react-icons/bi'
 
 function Home() {
   const navigate = useNavigate()
@@ -85,12 +86,14 @@ function Home() {
                   <LikeButton songId={song.id} onClick={handleLike} ml="auto" />
 
                   <Button
-                    bg="#ff78b5ff"
-                    color="white"
+                    bg="#fff6f6cf"
+                    color="#ff78b5ff"
                     ml={3}
                     onClick={() => handleComment(song.id)}
+                    p={2}
+                    borderRadius="full"
                   >
-                    コメント
+                    <BiComment size={20} />
                   </Button>
                 </Box>
               </Stack>
