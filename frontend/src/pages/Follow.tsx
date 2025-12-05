@@ -8,6 +8,7 @@ import {
   Button,
   useToast,
   Input,
+  IconButton,
 } from '@chakra-ui/react'
 type FollowEntry = {
   userId: string
@@ -137,15 +138,19 @@ function Follow() {
   return (
     <VStack spacing={6}>
       <Heading color="pink.400" size="lg">
-        QRでフォロー
-      </Heading>
-      <Button
-        variant="ghost"
-        onClick={() => navigate('/profile')}
-        alignSelf="flex-start"
-      >
-        × 戻る
-      </Button>
+  QRでフォロー
+</Heading>
+
+<IconButton
+  aria-label="戻る"
+  icon={<span style={{ fontSize: '18px' }}>←</span>}
+  size="sm"
+  variant="ghost"
+  colorScheme="pink"
+  onClick={() => navigate('/profile')}
+  _hover={{ bg: 'pink.50' }}
+  alignSelf="flex-start"
+/>
 
       <Text fontSize="sm" color="gray.600" textAlign="center">
         友だちのプロフィールQRコードを読み取って、フォローしましょう

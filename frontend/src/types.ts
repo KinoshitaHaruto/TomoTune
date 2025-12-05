@@ -31,3 +31,14 @@ export interface Song {
   url: string;
   parameters?: string; 
 }
+
+export interface Post {
+  id: number;
+  comment: string;
+  created_at: string;
+  user: {
+    id: string;
+    name: string;
+  } | null;
+  song: Song;
+}

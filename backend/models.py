@@ -31,8 +31,9 @@ class User(Base):
 
     music_type = relationship("MusicType")
 
-    # リレーション: ユーザーはたくさんの「いいねログ」を持つ
+    # リレーション: ユーザーはたくさんの「いいねログ」と「投稿」を持つ
     like_logs = relationship("LikeLog", back_populates="user")
+    posts = relationship("Post", back_populates="user")
 
 # Music Typeテーブル
 class MusicType(Base):
@@ -57,6 +58,7 @@ class Song(Base):
 
     # リレーション: 曲もたくさんの「いいねログ」を持つ
     like_logs = relationship("LikeLog", back_populates="song")
+    posts = relationship("Post", back_populates="song")
 
 
 # いいね履歴テーブル (ログ)
@@ -77,3 +79,26 @@ class LikeLog(Base):
     # リレーション設定
     user = relationship("User", back_populates="like_logs")
     song = relationship("Song", back_populates="like_logs")
+
+
+# 投稿テーブル
+class Post(Base):
+    __tablename__ = "posts"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+
+    # 誰が
+    user_id = Column(String, ForeignKey("users.id"), nullable=False)
+
+    # どの曲を
+    song_id = Column(Integer, ForeignKey("songs.id"), nullable=False)
+
+    # 一言コメント
+    comment = Column(String, nullable=False)
+
+    # いつ投稿したか
+    created_at = Column(DateTime, default=datetime.now)
+
+    # リレーション
+    user = relationship("User", back_populates="posts")
+    song = relationship("Song", back_populates="posts")

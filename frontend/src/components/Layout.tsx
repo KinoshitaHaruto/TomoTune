@@ -184,7 +184,7 @@ const Layout = () => {
               <Box width="100%">
                 <Heading size="sm" mb={1}>過去の投稿履歴</Heading>
                 <Text fontSize="sm" color="gray.600">
-                  まだ投稿機能がないため、履歴は表示できません。
+                  投稿履歴の表示は今後のアップデートで対応予定です。
                 </Text>
               </Box>
 
@@ -192,7 +192,7 @@ const Layout = () => {
 
               {/* 性格診断の詳細（最新結果） */}
               <Box width="100%">
-                <Heading size="sm" mb={1}>性格診断の詳細</Heading>
+                <Heading size="sm" mb={1}>MusicTypeの詳細</Heading>
                 {user && user.scores && user.music_type ? (
                   <VStack align="start" spacing={1} fontSize="sm">
                     <Text>現在のタイプコード: <b>{user.music_type.code}</b></Text>
@@ -213,7 +213,7 @@ const Layout = () => {
 
               {/* MBTI診断の履歴（バックエンド未実装のためプレースホルダ） */}
               <Box width="100%">
-                <Heading size="sm" mb={1}>MBTI診断の履歴</Heading>
+                <Heading size="sm" mb={1}>MusicTypeの履歴</Heading>
                 <Text fontSize="sm" color="gray.600">
                   履歴表示は今後のアップデートで対応予定です。現在のタイプはプロフィール画面から確認できます。
                 </Text>
