@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { 
   Box, 
   Text, 
@@ -10,10 +10,12 @@ import {
   SimpleGrid, 
   Card, 
   CardBody,
-  StackDivider
+  StackDivider,
+  Image
 } from "@chakra-ui/react";
 import { useUser } from "../contexts/UserContext";
 import { User } from "../types";
+import { API_BASE } from "../config";
 
 // スコアバーのサブコンポーネント
 const ScoreBar = ({ label, value, color, leftLabel, rightLabel }: { label: string, value: number, color: string, leftLabel: string, rightLabel: string }) => (
@@ -52,6 +54,27 @@ export const MusicTypeCard = ({ user: userOverride }: { user?: User | null }) =>
   // データがある場合
   const { code, name, description } = user.music_type;
   const { VC, MA, PR, HS } = user.scores;
+  
+  // 画像の読み込み状態を管理
+  const [imageError, setImageError] = useState(false);
+  const [imageLoading, setImageLoading] = useState(true);
+  const imageUrl = `${API_BASE}/type_pictures/${code}.jpg`;
+
+  // 画像の読み込みをチェック
+  useEffect(() => {
+    setImageError(false);
+    setImageLoading(true);
+    const img = new window.Image();
+    img.onload = () => {
+      setImageLoading(false);
+      setImageError(false);
+    };
+    img.onerror = () => {
+      setImageLoading(false);
+      setImageError(true);
+    };
+    img.src = imageUrl;
+  }, [code, imageUrl]);
 
   return (
     <Card 
@@ -78,6 +101,46 @@ export const MusicTypeCard = ({ user: userOverride }: { user?: User | null }) =>
             <Text fontSize="sm" color="gray.500" mt={2} px={4}>
               {description}
             </Text>
+          </Box>
+
+          {/* タイプ画像表示エリア */}
+          <Box textAlign="center">
+            {imageLoading ? (
+              <Box 
+                height="200px" 
+                display="flex" 
+                alignItems="center" 
+                justifyContent="center"
+                bg="gray.50"
+                borderRadius="md"
+              >
+                <Text fontSize="sm" color="gray.400">読み込み中...</Text>
+              </Box>
+            ) : imageError ? (
+              <Box 
+                height="200px" 
+                display="flex" 
+                alignItems="center" 
+                justifyContent="center"
+                bg="gray.50"
+                borderRadius="md"
+                border="1px dashed"
+                borderColor="gray.300"
+              >
+                <Text fontSize="sm" color="gray.500">
+                  まだ画像が準備できていません
+                </Text>
+              </Box>
+            ) : (
+              <Image
+                src={imageUrl}
+                alt={`${name} (${code})`}
+                maxH="200px"
+                mx="auto"
+                borderRadius="md"
+                objectFit="contain"
+              />
+            )}
           </Box>
 
           {/* パラメータグラフエリア */}
