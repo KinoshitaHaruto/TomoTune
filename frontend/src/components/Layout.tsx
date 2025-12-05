@@ -218,6 +218,15 @@ const Layout = () => {
                   履歴表示は今後のアップデートで対応予定です。現在のタイプはプロフィール画面から確認できます。
                 </Text>
               </Box>
+
+              <Divider />
+
+              <Box width="100%">
+                <Heading size="sm" mb={1}>クレジット</Heading>
+                <Text fontSize="sm" color="gray.600">
+                  音楽：BGMer (http://bgmer.net)
+                </Text>
+              </Box>
             </VStack>
           </Box>
         </Box>
