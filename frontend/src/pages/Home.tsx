@@ -12,36 +12,12 @@ import {
   Divider,
 } from '@chakra-ui/react'
 
-<<<<<<< HEAD
 import { API_BASE } from '../config'
 import LikeButton from '../components/LikeButton'
 import PostCard from '../components/PostCard'
 import type { Post } from '../types'
 
-// 曲データの設計図
-type Song = {
-  id: number;
-  title: string;
-  artist: string;
-  url: string;
-};
-
-function Home() {
-  const navigate = useNavigate()
-  const [userId, setUserId] = useState<string | null>(null)
-
-  // 曲系
-  const [songs, setSongs] = useState<Song[]>([])
-  const [openSongID, setOpenSongID] = useState<number | null>(null)
-
-  // 投稿系
-=======
-import LikeButton from '../components/LikeButton'
-import { API_BASE } from '../config'
-import PostCard from '../components/PostCard'
-import type { Post } from '../types'
-
-// 曲データの型
+// 曲の型
 type Song = {
   id: number
   title: string
@@ -54,12 +30,11 @@ function Home() {
 
   const [userId, setUserId] = useState<string | null>(null)
 
-  // 曲の状態
+  // 曲関連
   const [songs, setSongs] = useState<Song[]>([])
   const [openSongID, setOpenSongID] = useState<number | null>(null)
 
-  // 投稿の状態
->>>>>>> 6d80ec7c10070a3abb55dfb8ab32a11bd051ef34
+  // 投稿関連
   const [posts, setPosts] = useState<Post[]>([])
 
   // ログインチェック
@@ -84,13 +59,10 @@ function Home() {
   useEffect(() => {
     fetch(`${API_BASE}/posts`)
       .then((res) => res.json())
-<<<<<<< HEAD
-=======
       .then((data: Post[]) => setPosts(data))
       .catch((err) => console.error('投稿の取得に失敗しました', err))
   }, [])
 
-  // コメント Drawer を開く
   const handleComment = (songId: number) => {
     setOpenSongID(songId)
   }
@@ -112,9 +84,7 @@ function Home() {
         </Heading>
 
         {songs.length === 0 ? (
-          <Text color="gray.500" fontSize="sm">
-            曲を読み込んでいます…
-          </Text>
+          <Text color="gray.500" fontSize="sm">曲を読み込んでいます…</Text>
         ) : (
           songs.map((song) => (
             <Card
@@ -136,8 +106,8 @@ function Home() {
 
                   <Divider />
 
+                  {/* audio, Like, コメント */}
                   <Box display="flex" alignItems="center">
-                    {/* audio */}
                     <Box flex={1}>
                       <audio
                         controls
@@ -147,10 +117,8 @@ function Home() {
                       />
                     </Box>
 
-                    {/* いいね */}
                     <LikeButton songId={song.id} ml="auto" />
 
-                    {/* コメント */}
                     <Button
                       bg="#ff78b5ff"
                       color="white"
@@ -194,11 +162,7 @@ function Home() {
             <Text>・声好きすぎる</Text>
           </VStack>
 
-          <Button
-            mt={4}
-            width="100%"
-            onClick={() => setOpenSongID(null)}
-          >
+          <Button mt={4} width="100%" onClick={() => setOpenSongID(null)}>
             閉じる
           </Button>
         </Box>
@@ -211,9 +175,7 @@ function Home() {
         </Heading>
 
         {posts.length === 0 ? (
-          <Text color="gray.500" fontSize="sm">
-            投稿を読み込んでいます…
-          </Text>
+          <Text color="gray.500" fontSize="sm">投稿を読み込んでいます…</Text>
         ) : (
           posts.map((post) => (
             <PostCard
@@ -229,4 +191,3 @@ function Home() {
 }
 
 export default Home
->>>>>>> 6d80ec7c10070a3abb55dfb8ab32a11bd051ef34
