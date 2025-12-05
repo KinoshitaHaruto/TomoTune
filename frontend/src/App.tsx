@@ -50,6 +50,7 @@ function App() {
                 <Route path="/share" element={<Share />} />
                 <Route path="/music" element={<Music />} />
                 <Route path="/profile" element={<Profile />} />
+                <Route path="/profile/:userId" element={<Profile />} />
                 <Route path="/follow" element={<Follow />} />
         </Route>
             

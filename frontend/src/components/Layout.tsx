@@ -21,11 +21,10 @@ const Layout = () => {
   const location = useLocation()
   const toast = useToast()
   const { isOpen, onOpen, onClose } = useDisclosure()
-  const { user } = useUser()
+  const { user, logout } = useUser()
 
   const handleLogout = () => {
-    localStorage.removeItem("tomo_user_id")
-    localStorage.removeItem("tomo_user_name")
+    logout()
     toast({ title: 'ログアウトしました', status: 'info' })
     navigate("/login")
   }

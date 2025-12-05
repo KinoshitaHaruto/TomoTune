@@ -36,6 +36,14 @@ function Survey() {
     }
   }, [isUserLoading, user, navigate, toast])
 
+  // 既に診断済みならプロフィールへ誘導
+  useEffect(() => {
+    if (isUserLoading) return
+    if (user && (user.music_type || user.music_type_code)) {
+      navigate('/profile', { replace: true })
+    }
+  }, [user, isUserLoading, navigate])
+
   const questions = [
     // V vs C
     { id: 1, text: "定期的に新しい友人を作っている。", type: "V_C", side: "V" },

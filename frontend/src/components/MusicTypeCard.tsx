@@ -13,6 +13,7 @@ import {
   StackDivider
 } from "@chakra-ui/react";
 import { useUser } from "../contexts/UserContext";
+import { User } from "../types";
 
 // スコアバーのサブコンポーネント
 const ScoreBar = ({ label, value, color, leftLabel, rightLabel }: { label: string, value: number, color: string, leftLabel: string, rightLabel: string }) => (
@@ -29,8 +30,9 @@ const ScoreBar = ({ label, value, color, leftLabel, rightLabel }: { label: strin
   </Box>
 );
 
-export const MusicTypeCard = () => {
-  const { user } = useUser();
+export const MusicTypeCard = ({ user: userOverride }: { user?: User | null }) => {
+  const { user: currentUser } = useUser();
+  const user = userOverride ?? currentUser;
 
   // まだデータがない、または診断前の場合
   if (!user || !user.music_type) {

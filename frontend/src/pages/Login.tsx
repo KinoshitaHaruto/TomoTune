@@ -1,47 +1,51 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button, Heading, Input, Text, VStack, useToast } from '@chakra-ui/react'
 
-import { API_BASE } from '../config'
+import { useUser } from '../contexts/UserContext'
 
 function Login() {
   const [name, setName] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
   const navigate = useNavigate() // 画面遷移用のフック
   const toast = useToast()
+  const { login, refreshUser, user, isLoading } = useUser()
 
-  const handleLogin = () => {
+  // 既にログイン済みなら状態に応じてリダイレクト
+  useEffect(() => {
+    const savedId = localStorage.getItem("tomo_user_id")
+    if (savedId && !user && !isLoading) {
+      // user が未取得なら最新化してから判断する
+      refreshUser()
+    }
+  }, [user, isLoading, refreshUser])
+
+  useEffect(() => {
+    if (isLoading || !user) return
+    if (user.music_type || user.music_type_code) {
+      navigate("/profile", { replace: true })
+    } else {
+      navigate("/survey", { replace: true })
+    }
+  }, [user, isLoading, navigate])
+
+  const handleLogin = async () => {
     if (!name) {
       toast({ title: "名前を入力してください", status: "warning" })
       return
     }
 
-    setIsLoading(true)
+    const loggedInUser = await login(name)
 
-    // ログインAPIへPOSTリクエスト
-    fetch(`${API_BASE}/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: name }),
-    })
-    .then(res => res.json())
-    .then(data => {
-      console.log("ログイン成功:", data)
-      
-      // IDをlocalStorageに保存
-      localStorage.setItem("tomo_user_id", data.id)
-      localStorage.setItem("tomo_user_name", data.name)
-
-      toast({ title: `ようこそ、${data.name}さん！`, status: "success" })
-
-      // アンケートページへ移動
-      navigate("/survey")
-    })
-    .catch(err => {
-      console.error(err)
+    if (loggedInUser) {
+      toast({ title: `ようこそ、${loggedInUser.name}さん！`, status: "success" })
+      if (loggedInUser.music_type || loggedInUser.music_type_code) {
+        navigate("/profile")
+      } else {
+        navigate("/survey")
+      }
+    } else {
       toast({ title: "ログインエラー", status: "error" })
-    })
-    .finally(() => setIsLoading(false))
+    }
   }
 
   return (

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Float
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Float, UniqueConstraint
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from database import Base
@@ -35,6 +35,18 @@ class User(Base):
     like_logs = relationship("LikeLog", back_populates="user")
     posts = relationship("Post", back_populates="user")
     comments = relationship("Comment", back_populates="user")
+    followers = relationship(
+        "Follow",
+        foreign_keys="Follow.followed_id",
+        back_populates="followed",
+        cascade="all,delete-orphan",
+    )
+    followings = relationship(
+        "Follow",
+        foreign_keys="Follow.follower_id",
+        back_populates="follower",
+        cascade="all,delete-orphan",
+    )
 
 # Music Typeテーブル
 class MusicType(Base):
@@ -119,3 +131,20 @@ class Comment(Base):
     # リレーション
     post = relationship("Post", back_populates="comments")
     user = relationship("User", back_populates="comments")
+
+
+# フォロー関係テーブル
+class Follow(Base):
+    __tablename__ = "follows"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    follower_id = Column(String, ForeignKey("users.id"), nullable=False)
+    followed_id = Column(String, ForeignKey("users.id"), nullable=False)
+    created_at = Column(DateTime, default=datetime.now)
+
+    follower = relationship("User", foreign_keys=[follower_id], back_populates="followings")
+    followed = relationship("User", foreign_keys=[followed_id], back_populates="followers")
+
+    __table_args__ = (
+        UniqueConstraint("follower_id", "followed_id", name="uq_follower_followed"),
+    )

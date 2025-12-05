@@ -4,7 +4,7 @@ import { API_BASE } from "../config";
 
 interface UserContextType {
   user: User | null;
-  login: (name: string) => Promise<void>;
+  login: (name: string) => Promise<User | null>;
   logout: () => void;
   refreshUser: () => Promise<void>;
   isLoading: boolean;
@@ -24,7 +24,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
-  const fetchUser = async (userId: string) => {
+  const fetchUser = async (userId: string): Promise<User | null> => {
     try {
       setIsLoading(true);
       const res = await fetch(`${API_BASE}/users/${userId}`);
@@ -33,21 +33,28 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         // 404ならユーザーが存在しないので消す
         if (res.status === 404) {
              localStorage.removeItem("tomo_user_id");
+             localStorage.removeItem("tomo_user_name");
              setUser(null);
         }
-        return;
+        return null;
       }
       const data = await res.json();
       setUser(data);
+      // localStorage の表示用の名前も最新化しておく
+      if (data?.name) {
+        localStorage.setItem("tomo_user_name", data.name);
+      }
+      return data;
     } catch (err) {
       console.error(err);
       // ネットワークエラー等の場合は消さない（再試行のチャンスを残す）
+      return null;
     } finally {
       setIsLoading(false);
     }
   };
 
-  const login = async (name: string) => {
+  const login = async (name: string): Promise<User | null> => {
     try {
       setIsLoading(true);
       const res = await fetch(`${API_BASE}/login`, {
@@ -60,10 +67,16 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       // /login は最小限のユーザー情報を返すので、id だけ保存してから
       // /users/{id} を叩いて User 型に揃えたデータを取得する
       localStorage.setItem("tomo_user_id", data.id);
-      await fetchUser(data.id);
+      const fetched = await fetchUser(data.id);
+      // name も確実に保存しておく（プロフィール画面の既存実装向け）
+      if (fetched?.name) {
+        localStorage.setItem("tomo_user_name", fetched.name);
+      }
+      return fetched ?? null;
     } catch (err) {
       console.error(err);
       alert("ログインに失敗しました");
+      return null;
     } finally {
       setIsLoading(false);
     }
@@ -71,6 +84,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = () => {
     localStorage.removeItem("tomo_user_id");
+    localStorage.removeItem("tomo_user_name");
     setUser(null);
   };
 

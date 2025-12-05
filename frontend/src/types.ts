@@ -22,6 +22,9 @@ export interface User {
   // まだ診断されていない(null)場合や、コードだけの取得に備えて ? (Optional) にする
   music_type_code?: string; 
   music_type?: MusicType;   
+  follower_count?: number;
+  following_count?: number;
+  viewer_is_following?: boolean;
 }
 
 export interface Song {

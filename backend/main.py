@@ -65,6 +65,10 @@ class CommentCreateRequest(BaseModel):
     content: str
 
 
+class FollowRequest(BaseModel):
+    user_id: str  # follower
+
+
 # --- API ---
 
 # 全曲取得API
@@ -123,7 +127,7 @@ def save_diagnosis(req: DiagnosisRequest, db: Session = Depends(get_db)):
 
 # 詳細取得用API (Profile画面用)
 @app.get("/users/{user_id}")
-def get_user_detail(user_id: str, db: Session = Depends(get_db)):
+def get_user_detail(user_id: str, viewer_id: str | None = None, db: Session = Depends(get_db)):
     # joinedloadでMusicType情報も結合して取得
     user = db.query(models.User).options(joinedload(models.User.music_type)).filter(models.User.id == user_id).first()
     
@@ -139,6 +143,12 @@ def get_user_detail(user_id: str, db: Session = Depends(get_db)):
             "description": user.music_type.description
         }
 
+    follower_count = crud.count_followers(db, user.id)
+    following_count = crud.count_followings(db, user.id)
+    viewer_is_following = False
+    if viewer_id:
+        viewer_is_following = crud.is_following(db, viewer_id, user.id)
+
     return {
         "id": user.id,
         "name": user.name,
@@ -148,7 +158,11 @@ def get_user_detail(user_id: str, db: Session = Depends(get_db)):
             "PR": user.score_pr,
             "HS": user.score_hs
         },
-        "music_type": music_type_data
+        "music_type": music_type_data,
+        "music_type_code": user.music_type_code,
+        "follower_count": follower_count,
+        "following_count": following_count,
+        "viewer_is_following": viewer_is_following,
     }
 
 @app.post("/likes", status_code=status.HTTP_201_CREATED)
@@ -348,6 +362,28 @@ def list_comments(post_id: int, db: Session = Depends(get_db)):
     return payload
 
 
+@app.post("/users/{target_id}/follow", status_code=status.HTTP_201_CREATED)
+def follow_user(target_id: str, req: FollowRequest, db: Session = Depends(get_db)):
+    if target_id == req.user_id:
+        raise HTTPException(status_code=400, detail="Cannot follow yourself")
+    follower = crud.get_user_by_id(db, req.user_id)
+    target = crud.get_user_by_id(db, target_id)
+    if not follower or not target:
+        raise HTTPException(status_code=404, detail="User not found")
+    crud.create_follow(db, req.user_id, target_id)
+    follower_count = crud.count_followers(db, target_id)
+    return {"status": "ok", "follower_count": follower_count}
+
+
+@app.delete("/users/{target_id}/follow", status_code=status.HTTP_200_OK)
+def unfollow_user(target_id: str, req: FollowRequest, db: Session = Depends(get_db)):
+    follower = crud.get_user_by_id(db, req.user_id)
+    target = crud.get_user_by_id(db, target_id)
+    if not follower or not target:
+        raise HTTPException(status_code=404, detail="User not found")
+    crud.delete_follow(db, req.user_id, target_id)
+    follower_count = crud.count_followers(db, target_id)
+    return {"status": "ok", "follower_count": follower_count}
 @app.post("/posts/{post_id}/comments", status_code=status.HTTP_201_CREATED)
 def create_comment(post_id: int, req: CommentCreateRequest, db: Session = Depends(get_db)):
     post = crud.get_post_by_id(db, post_id)

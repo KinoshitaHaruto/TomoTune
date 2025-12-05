@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func # 集計用(COUNTとか)
 from datetime import datetime
 import uuid
-from models import User, Song, LikeLog, Post, Comment
+from models import User, Song, LikeLog, Post, Comment, Follow
 
 # --- 曲の操作 ---
 
@@ -153,4 +153,49 @@ def get_comments_by_post(db: Session, post_id: int):
         .order_by(Comment.created_at.asc())
         .all()
     )
+
+
+# --- フォローの操作 ---
+
+def create_follow(db: Session, follower_id: str, followed_id: str):
+    """フォローを作成（既存なら何もしない）"""
+    if follower_id == followed_id:
+        return None
+    existing = (
+        db.query(Follow)
+        .filter(Follow.follower_id == follower_id, Follow.followed_id == followed_id)
+        .first()
+    )
+    if existing:
+        return existing
+    follow = Follow(follower_id=follower_id, followed_id=followed_id)
+    db.add(follow)
+    db.commit()
+    db.refresh(follow)
+    return follow
+
+
+def delete_follow(db: Session, follower_id: str, followed_id: str):
+    """フォロー解除"""
+    db.query(Follow).filter(
+        Follow.follower_id == follower_id, Follow.followed_id == followed_id
+    ).delete()
+    db.commit()
+
+
+def is_following(db: Session, follower_id: str, followed_id: str) -> bool:
+    return (
+        db.query(Follow)
+        .filter(Follow.follower_id == follower_id, Follow.followed_id == followed_id)
+        .first()
+        is not None
+    )
+
+
+def count_followers(db: Session, user_id: str) -> int:
+    return db.query(Follow).filter(Follow.followed_id == user_id).count()
+
+
+def count_followings(db: Session, user_id: str) -> int:
+    return db.query(Follow).filter(Follow.follower_id == user_id).count()
 

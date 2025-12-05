@@ -1,4 +1,5 @@
-import React, { useMemo, useState } from 'react'
+import React, { useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   Box,
   Heading,
@@ -29,7 +30,8 @@ const PostCard: React.FC<PostCardProps> = ({ post, currentUserId, onOpenComments
   const audioSrc = post.song.url.startsWith('http') ? post.song.url : `${API_BASE || ''}${post.song.url}`
   const date = new Date(post.created_at)
   const isMine = currentUserId && post.user && post.user.id === currentUserId
-  const [comments] = useState<Comment[]>(post.comments ?? [])
+  const commentCount = post.comments ? post.comments.length : 0
+  const navigate = useNavigate()
 
   const userTypeLabel = useMemo(() => {
     if (!post.user?.music_type) return null
@@ -52,9 +54,16 @@ const PostCard: React.FC<PostCardProps> = ({ post, currentUserId, onOpenComments
               <Text fontSize="sm" color="gray.500">
                 投稿者
               </Text>
-              <Heading size="sm" color="gray.800">
-                {post.user?.name ?? 'Unknown'}
-              </Heading>
+              <HStack spacing={2} align="center">
+                <Heading size="sm" color="gray.800">
+                  {post.user?.name ?? 'Unknown'}
+                </Heading>
+                {post.user?.id && !isMine && (
+                  <Button size="xs" variant="outline" onClick={() => navigate(`/profile/${post.user?.id}`)}>
+                    プロフィールを見る
+                  </Button>
+                )}
+              </HStack>
               {userTypeLabel && (
                 <Tag size="sm" colorScheme="purple" mt={1} variant="subtle">
                   {userTypeLabel}
@@ -106,7 +115,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, currentUserId, onOpenComments
                 コメント
               </Text>
               <Badge colorScheme="pink" fontSize="xs">
-                {comments.length}件
+                {commentCount}件
               </Badge>
             </HStack>
             <IconButton

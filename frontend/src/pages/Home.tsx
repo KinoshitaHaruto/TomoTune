@@ -9,6 +9,7 @@ import {
   HStack,
   Tag,
   Textarea,
+  useToast,
 } from '@chakra-ui/react'
 
 import PostCard from '../components/PostCard'
@@ -16,6 +17,7 @@ import { API_BASE } from '../config'
 import type { Post, Comment } from '../types'
 function Home() {
   const navigate = useNavigate()
+  const toast = useToast()
 
   const [userId, setUserId] = useState<string | null>(null)
   const [posts, setPosts] = useState<Post[]>([])
@@ -45,6 +47,26 @@ function Home() {
     setSelectedPost(post)
     setComments(post.comments ?? [])
     setCommentText('')
+    // 最新のコメントを取得して表示を同期
+    fetchComments(post.id)
+  }
+
+  const fetchComments = async (postId: number) => {
+    try {
+      const res = await fetch(`${API_BASE}/posts/${postId}/comments`)
+      if (!res.ok) throw new Error('Failed to fetch comments')
+      const data = await res.json()
+      setComments(data)
+      // posts一覧側のコメント件数も更新しておく
+      setPosts((prev) =>
+        prev.map((p) =>
+          p.id === postId ? { ...p, comments: data } : p
+        )
+      )
+    } catch (e) {
+      console.error(e)
+      toast({ title: 'コメントの再取得に失敗しました', status: 'error' })
+    }
   }
 
   const handleAddComment = async () => {
@@ -67,7 +89,9 @@ function Home() {
     }
 
     const newComment = (await res.json()) as Comment
+    // いったん追加し、直後にサーバーデータで再同期する
     setComments((prev) => [...prev, newComment])
+    await fetchComments(selectedPost.id)
     setCommentText('')
   }
 
