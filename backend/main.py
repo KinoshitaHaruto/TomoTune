@@ -71,6 +71,10 @@ class CommentCreateRequest(BaseModel):
 class FollowRequest(BaseModel):
     user_id: str  # follower
 
+class UnlikeRequest(BaseModel):
+    song_id: int
+    user_id: str
+
 
 # --- API ---
 
@@ -235,6 +239,58 @@ def get_favorites(user_id: str, db: Session = Depends(get_db)):
 
     song_ids = crud.get_favorite_song_ids(db, user_id, threshold=LIKE_MILESTONE)
     return {"song_ids": song_ids}
+
+@app.delete("/likes", status_code=status.HTTP_200_OK)
+def delete_like(req: UnlikeRequest, db: Session = Depends(get_db)):
+    """
+    特定の曲に対するユーザーのいいねを1件削除するAPI
+    """
+    user = crud.get_user_by_id(db, req.user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # 現在のいいね数を取得
+    current_total = crud.count_likes(db, req.song_id, req.user_id)
+    
+    if current_total == 0:
+        raise HTTPException(status_code=404, detail="Like not found")
+    
+    # お気に入りから外すため、いいねを5回未満になるまで削除
+    # つまり、5回以上いいねしている場合は、5回未満になるまで削除
+    target_count = LIKE_MILESTONE - 1  # 4回以下にする
+    
+    # 削除する件数を計算
+    delete_count = max(0, current_total - target_count)
+    
+    if delete_count > 0:
+        # 最新のいいねログを削除する件数分取得して削除
+        like_logs = (
+            db.query(models.LikeLog)
+            .filter(
+                models.LikeLog.user_id == req.user_id,
+                models.LikeLog.song_id == req.song_id
+            )
+            .order_by(models.LikeLog.timestamp.desc())
+            .limit(delete_count)
+            .all()
+        )
+        
+        for like_log in like_logs:
+            db.delete(like_log)
+        
+        db.commit()
+    
+    # 削除後のいいね数を取得
+    total = crud.count_likes(db, req.song_id, req.user_id)
+    is_favorite = (total >= LIKE_MILESTONE)
+    
+    logger.info(f"[💔]: User: {user.name} | SongID: {req.song_id} | Deleted: {delete_count} | Remaining: {total}")
+    
+    return {
+        "status": "ok",
+        "total_likes": total,
+        "is_favorite": is_favorite,
+    }
 
 
 # --- 投稿API ---

@@ -84,6 +84,22 @@ def get_favorite_song_ids(db: Session, user_id: str, threshold: int = 5):
     )
     return [row[0] for row in rows]
 
+def delete_like_log(db: Session, user_id: str, song_id: int):
+    """
+    特定の曲に対するユーザーの最新のいいねログを1件削除する
+    """
+    like_log = (
+        db.query(LikeLog)
+        .filter(LikeLog.user_id == user_id, LikeLog.song_id == song_id)
+        .order_by(LikeLog.timestamp.desc())
+        .first()
+    )
+    if like_log:
+        db.delete(like_log)
+        db.commit()
+        return True
+    return False
+
 
 # --- 投稿の操作 ---
 

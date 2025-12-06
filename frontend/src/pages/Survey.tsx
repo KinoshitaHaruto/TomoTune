@@ -50,7 +50,7 @@ function Survey() {
     { id: 2, text: "単純明快なアイデアよりも、複雑で新奇なアイデアのほうがワクワクする。", type: "V_C", side: "V" },
     { id: 3, text: "BGMにはテンポ感のある曲を選びがちだ。", type: "V_C", side: "V" },
     // M vs A
-    { id: 4, text: "曲の良さは、メロディのキャッチーさで決まることが多い。", type: "M_A", side: "M" },
+    { id: 4, text: "曲の良さは、メロディの良さで決まることが多い。", type: "M_A", side: "M" },
     { id: 5, text: "音楽に世界観やストーリー性を重視する。", type: "M_A", side: "A" },
     { id: 6, text: "曲単体より、アルバム全体の雰囲気のほうが気になる。", type: "M_A", side: "A" },
     // P vs R
@@ -59,7 +59,7 @@ function Survey() {
     { id: 9, text: "同じ曲でも、歌声の\"表現\"で評価が大きく変わる。", type: "P_R", side: "R" },
     // H vs S
     { id: 10, text: "生楽器の温もりのある音が好きだ。", type: "H_S", side: "H" },
-    { id: 11, text: "電子音やシンセサウンドに魅力を感じる。", type: "H_S", side: "S" },
+    { id: 11, text: "電子的な音楽やシンセサウンドに魅力を感じる。", type: "H_S", side: "S" },
     { id: 12, text: "生演奏より電子的なアレンジのほうが集中できる。", type: "H_S", side: "S" },
   ]
 

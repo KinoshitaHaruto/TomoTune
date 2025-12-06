@@ -72,6 +72,26 @@ function Music() {
     }
   }
 
+  const handleRemoveFavorite = async (songId: number) => {
+    // ローカル状態を即座に更新（UIの即時反応のため）
+    setFavoriteIds((prev) => prev.filter((id) => id !== songId))
+    
+    // バックエンドからお気に入りリストを再取得して同期
+    if (userId) {
+      try {
+        const res = await fetch(`${API_BASE}/favorites/${userId}`)
+        if (res.ok) {
+          const data: { song_ids: number[] } = await res.json()
+          setFavoriteIds(data.song_ids || [])
+        }
+      } catch (err) {
+        console.error('お気に入りリストの再取得に失敗:', err)
+        // エラーが発生した場合は、ローカル状態を元に戻す
+        // （ただし、削除は成功している可能性があるので、再取得を試みる）
+      }
+    }
+  }
+
   const displayedSongs = showFavoritesOnly
     ? songs.filter((song) => favoriteIds.includes(song.id))
     : songs
@@ -114,6 +134,7 @@ function Music() {
             onLikeSuccess={(total, isMilestone) =>
               handleLikeSuccess(song.id, total, isMilestone)
             }
+            onRemoveFavorite={handleRemoveFavorite}
           />
         ))
       )}
